@@ -1,0 +1,29 @@
+# One-click free deploy on Render: https://render.com/deploy?repo=https://github.com/tejaspatil2295/Aaroh
+# Database: a free Neon Postgres (https://neon.tech). Paste its connection string as DATABASE_URL when asked.
+services:
+  - type: web
+    name: aaroh
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false            # Render asks for it: your Neon connection string
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: UPLOAD_STORAGE
+        value: database        # free instances have no persistent disk, so photos live in Postgres
+      - key: CORS_ORIGINS
+        value: https://localhost,capacitor://localhost
+      - key: SEED_DEMO
+        value: "true"          # creates demo@aaroh.app once; set to false to skip
+      - key: AI_PROVIDER
+        value: none            # or anthropic / openai_compatible, then add the key

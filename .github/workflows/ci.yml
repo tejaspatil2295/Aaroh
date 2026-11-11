@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: "HTTPS address of your AAROH server, baked into the APK as the default"
+        required: false
+        default: ""
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: aaroh, POSTGRES_PASSWORD: aaroh, POSTGRES_DB: aaroh_test }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 20
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: python -m pytest -q
+        env: { DATABASE_URL: "postgresql+psycopg://aaroh:aaroh@localhost:5432/aaroh_test" }
+      - name: Migrations apply cleanly
+        run: alembic upgrade head
+        env: { DATABASE_URL: "postgresql+psycopg://aaroh:aaroh@localhost:5432/aaroh_test" }
+
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+
+  hosting-image:
+    # The single-service image used by render.yaml (free hosting)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t aaroh .
+      - name: Image starts, migrates and serves the web app + API
+        run: |
+          docker network create t
+          docker run -d --name db --network t -e POSTGRES_USER=aaroh -e POSTGRES_PASSWORD=aaroh -e POSTGRES_DB=aaroh postgres:16
+          sleep 8
+          docker run -d --name app --network t -p 8000:8000 -e DATABASE_URL=postgres://aaroh:aaroh@db:5432/aaroh \
+            -e SECRET_KEY=ci-secret -e ENCRYPTION_KEY=ci-enc -e UPLOAD_STORAGE=database -e SEED_DEMO=true aaroh
+          for i in $(seq 1 30); do curl -fs localhost:8000/api/health && break; sleep 2; done
+          curl -fs localhost:8000/api/health
+          curl -fs localhost:8000/ | grep -qi "<!doctype html>"
+          curl -fs localhost:8000/tasks | grep -qi "<!doctype html>"
+          docker logs app | tail -20
+
+  android-apk:
+    runs-on: ubuntu-latest
+    needs: web
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - run: npm ci
+      - name: Build web bundle and sync into Android project
+        run: npm run build && npx cap sync android
+        env: { VITE_API_URL: "${{ inputs.api_url || vars.AAROH_API_URL }}" }
+      - name: Assemble APK
+        working-directory: web/android
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+            ./gradlew assembleRelease \
+              -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
+              -Pandroid.injected.signing.store.password='${{ secrets.ANDROID_KEYSTORE_PASSWORD }}' \
+              -Pandroid.injected.signing.key.alias='${{ secrets.ANDROID_KEY_ALIAS }}' \
+              -Pandroid.injected.signing.key.password='${{ secrets.ANDROID_KEY_PASSWORD }}'
+          else
+            ./gradlew assembleDebug
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aaroh-apk
+          path: web/android/app/build/outputs/apk/**/*.apk

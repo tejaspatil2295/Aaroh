@@ -1,0 +1,66 @@
+name: Live check
+
+# Manually checks a deployed AAROH (e.g. the free Render site) from outside: health, web app, login, refresh cookie, dashboard.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Deployed address, e.g. https://aaroh-xxxx.onrender.com"
+        required: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04   # Playwright's browser deps don't install on ubuntu-latest (26.04) yet
+    env:
+      URL: ${{ inputs.url }}
+    steps:
+      - name: Wake the service (free instances sleep)
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fs -m 60 "$URL/api/health"; then echo; exit 0; fi
+            sleep 10
+          done
+          exit 1
+      - name: Web app is served (root and a deep link)
+        run: |
+          curl -fs "$URL/" | grep -qi "<!doctype html>"
+          curl -fs "$URL/finance" | grep -qi "<!doctype html>"
+          js=$(curl -fs "$URL/" | grep -o '/assets/[^"]*\.js' | head -1)
+          curl -fsI "$URL$js" | head -1
+      - name: Demo login, refresh cookie and dashboard
+        run: |
+          tok=$(curl -fs -c jar -H 'Content-Type: application/json' -d '{"email":"demo@aaroh.app","password":"Aaroh@2026"}' "$URL/api/v1/auth/login" | jq -r .access_token)
+          test -n "$tok" && test "$tok" != null
+          grep -q refresh jar && echo "refresh cookie set"
+          curl -fs -H "Authorization: Bearer $tok" "$URL/api/v1/dashboard" | jq -c 'keys'
+          curl -fs -H "Authorization: Bearer $tok" "$URL/api/v1/tasks?limit=3" | jq 'length'
+          curl -fs -b jar -X POST "$URL/api/v1/auth/refresh" | jq -r '.access_token | length'
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/v1/dashboard"); test "$code" = 401 && echo "unauthenticated request rejected"
+          curl -fsI "$URL/" | grep -i -E 'strict-transport|x-frame|x-content' || true
+      - name: Screenshots (phone and desktop)
+        run: |
+          npm i -g playwright@1.56.1 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+          cat > shot.cjs <<'JS'
+          const { chromium, devices } = require(require('child_process').execSync('npm root -g').toString().trim() + '/playwright');
+          (async () => {
+            const b = await chromium.launch();
+            for (const [name, opts] of [['phone', devices['Pixel 7']], ['desktop', { viewport: { width: 1366, height: 860 } }]]) {
+              const p = await (await b.newContext({ ...opts, timezoneId: 'Asia/Kolkata' })).newPage();
+              const errors = []; p.on('pageerror', e => errors.push(String(e)));
+              await p.goto(process.env.URL + '/login');
+              await p.fill('input[type=email]', 'demo@aaroh.app');
+              await p.fill('input[type=password]', 'Aaroh@2026');
+              await p.click('button[type=submit]');
+              await p.waitForURL(u => !u.pathname.startsWith('/login'), { timeout: 60000 });
+              await p.waitForTimeout(4000);
+              await p.screenshot({ path: `live-${name}.png` });
+              console.log(name, 'ok', p.url(), errors.length ? errors : 'no page errors');
+              if (errors.length) process.exitCode = 1;
+            }
+            await b.close();
+          })();
+          JS
+          node shot.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: live-screenshots, path: "*.png" }

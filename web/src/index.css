@@ -1,0 +1,84 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+}
+
+:root {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-2: #f2f2f4;
+  --line: #e7e7ea;
+  --ink: #18181b;
+  --ink-2: #52525b;
+  --ink-3: #8e8e96;
+  --accent: #5b5bd6;
+  --accent-soft: #ededfc;
+  --good: #16a34a;
+  --warn: #d97706;
+  --bad: #dc2626;
+  --chart-1: #5b5bd6;
+  --chart-2: #0ea5a4;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #64748b;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0b0f;
+  --surface: #131318;
+  --surface-2: #1b1b22;
+  --line: #26262e;
+  --ink: #f4f4f5;
+  --ink-2: #b4b4bc;
+  --ink-3: #75757f;
+  --accent: #8b8bf5;
+  --accent-soft: #23233d;
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --chart-1: #8b8bf5;
+  --chart-2: #2dd4bf;
+  --chart-3: #fbbf24;
+  --chart-4: #f472b6;
+  --chart-5: #94a3b8;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-tap-highlight-color: transparent;
+}
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-top { padding-top: env(safe-area-inset-top); }
+.fade-in { animation: fade .18s ease-out; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.prose-ai p { margin: .4rem 0; }
+.prose-ai ul { list-style: disc; padding-left: 1.2rem; margin: .4rem 0; }
+.prose-ai ol { list-style: decimal; padding-left: 1.2rem; margin: .4rem 0; }
+.prose-ai li { margin: .15rem 0; }
+.prose-ai h1, .prose-ai h2, .prose-ai h3 { font-weight: 600; margin: .7rem 0 .3rem; }
+.prose-ai strong { font-weight: 600; }
+.prose-ai code { background: var(--surface-2); padding: 0 .25rem; border-radius: .25rem; font-size: .85em; }
+.prose-ai pre { background: var(--surface-2); padding: .6rem; border-radius: .5rem; overflow-x: auto; }
+input[type="date"]::-webkit-calendar-picker-indicator, input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: .6; }
+.dark input[type="date"]::-webkit-calendar-picker-indicator, .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); }
