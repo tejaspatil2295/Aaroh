@@ -51,7 +51,6 @@ jobs:
         with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: "21" }
-      - uses: android-actions/setup-android@v3
       - run: npm ci
       - name: Build web bundle and sync into Android project
         run: npm run build && npx cap sync android
