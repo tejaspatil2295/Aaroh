@@ -17,6 +17,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -240,6 +241,7 @@ class Attachment(OwnedMixin, Base):
     content_type: Mapped[str] = mapped_column(String(100))
     size_bytes: Mapped[int] = mapped_column(Integer)
     storage_path: Mapped[str] = mapped_column(String(500))
+    data: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
 
 
 # ---------------------------------------------------------------- learning

@@ -8,8 +8,9 @@ Web app + Android app (one React codebase via Capacitor) on a FastAPI + PostgreS
 
 | Area | State |
 |---|---|
-| Backend: 10 modules, auth, AI layer, migrations | Done; 16 API tests pass (`backend/tests`) |
+| Backend: 10 modules, auth, AI layer, migrations | Done; 18 API tests pass (`backend/tests`) |
 | Web app: 11 screens, light/dark, mobile layout | Done; 17 end-to-end browser journeys pass (`web/e2e/run.mjs`) |
+| Free one-click hosting (Render + Neon via `render.yaml`) | Single-service image verified locally; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#0-free-hosting-render--neon-no-server-to-manage) |
 | Docker Compose stack (db, api, web, backups, optional HTTPS) | Built and verified locally |
 | Android project (Capacitor) | Generated with icons, secure token storage, local notifications |
 | APK | Builds in GitHub Actions (`.github/workflows/ci.yml`) or locally with the Android SDK; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
@@ -53,7 +54,7 @@ cd web && npm run build                                  # type-check + build
 cd web && BASE_URL=http://localhost:5173 node e2e/run.mjs   # needs Playwright, a running stack and the seeded demo user
 ```
 
-API tests cover auth (rotation and token-reuse detection), cross-user data isolation, every module's CRUD and summaries, smart planning, recurrence, photo uploads, settings and privacy filtering, offline AI, the OpenAI-compatible provider, the Anthropic SDK request shape, export and account deletion.
+API tests (18) cover auth (rotation and token-reuse detection), cross-user data isolation, every module's CRUD and summaries, smart planning, recurrence, photo uploads, settings and privacy filtering, offline AI, the OpenAI-compatible provider, the Anthropic SDK request shape, export and account deletion.
 
 ## Using AI
 

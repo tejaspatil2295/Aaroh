@@ -1,6 +1,7 @@
 """Create a demo account with ~5 weeks of realistic sample data.
 
 Usage:  python -m app.seed            (idempotent: recreates the demo user)
+        python -m app.seed --if-missing (only seeds when the demo user does not exist yet)
 Login:  demo@aaroh.app / Aaroh@2026
 """
 import random
@@ -233,5 +234,12 @@ def run() -> None:
 
 
 if __name__ == "__main__":
+    import sys
+
     _ = timezone
+    if "--if-missing" in sys.argv:
+        with SessionLocal() as _db:
+            if _db.scalar(select(M.User).where(M.User.email == DEMO_EMAIL)):
+                print("Demo user already exists; not re-seeding")
+                sys.exit(0)
     run()

@@ -10,6 +10,21 @@
 | An LLM API key (optional): Anthropic, OpenAI, Groq, OpenRouter, or a local Ollama | Aaroh AI | `backend/.env` or per user in Settings → AI |
 | A GitHub repository (optional) | CI and building the APK with GitHub Actions | push this folder |
 
+## 0. Free hosting (Render + Neon, no server to manage)
+
+Costs nothing. You need a GitHub login, a free [Neon](https://neon.tech) account (database) and a free [Render](https://render.com) account (app). Both let you sign up with GitHub.
+
+1. **Database:** in Neon, create a project (region: Singapore or Mumbai if offered). Copy the connection string from the dashboard (it starts with `postgresql://` and ends with `?sslmode=require`).
+2. **App:** open https://render.com/deploy?repo=https://github.com/tejaspatil2295/Aaroh. Render reads `render.yaml` and asks for `DATABASE_URL`: paste the Neon string, then click **Deploy**. The first build takes about 5-10 minutes.
+3. Open the address Render shows (`https://aaroh-xxxx.onrender.com`) and register your own account. A demo account `demo@aaroh.app` / `Aaroh@2026` is created too; set `SEED_DEMO=false` in Render to skip it.
+
+What the free tier means in practice:
+- The app sleeps after 15 minutes without visits; the next visit takes about a minute to wake it.
+- Neon's free database holds 0.5 GB, which is years of personal data. Journal photos are stored in the database on this setup (`UPLOAD_STORAGE=database`) because free Render instances have no permanent disk.
+- Every push to `main` redeploys automatically.
+
+This uses the root `Dockerfile`, which builds the web app and serves it from the API, so web and API share one HTTPS address.
+
 ## 1. Server (Docker Compose)
 
 ```bash

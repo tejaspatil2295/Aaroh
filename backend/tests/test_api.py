@@ -152,6 +152,25 @@ def test_journal_search_tags_and_photo(client, user):
     assert client.get(f"{API}/journal", headers=h, params={"mood": "5"}).json()[0]["title"] == "Trek"
 
 
+def test_photo_stored_in_database(client, user, monkeypatch):
+    from app.config import get_settings
+    monkeypatch.setattr(get_settings(), "upload_storage", "database")
+    h = user["headers"]
+    e = client.post(f"{API}/journal", headers=h, json={"title": "Pic", "body": "x", "entry_date": TODAY}).json()
+    png = b"\x89PNG\r\n\x1a\n" + b"1" * 50
+    up = client.post(f"{API}/attachments", headers=h, params={"entity_type": "journal", "entity_id": e["id"]}, files={"file": ("p.png", png, "image/png")})
+    assert up.status_code == 201
+    got = client.get(f"{API}/attachments/{up.json()['id']}/file", headers=h)
+    assert got.content == png and got.headers["content-type"] == "image/png"
+    assert client.delete(f"{API}/attachments/{up.json()['id']}", headers=h).status_code == 204
+
+
+def test_hosted_postgres_url_gets_psycopg_driver():
+    from app.config import Settings
+    assert Settings(database_url="postgres://u:p@h/db?sslmode=require").database_url == "postgresql+psycopg://u:p@h/db?sslmode=require"
+    assert Settings(database_url="postgresql://u:p@h/db").database_url.startswith("postgresql+psycopg://")
+
+
 # ---------------------------------------------------------------- learning
 def test_learning_hub(client, user):
     h = user["headers"]

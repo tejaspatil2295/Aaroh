@@ -61,3 +61,25 @@ def health():
     with SessionLocal() as db:
         db.execute(text("select 1"))
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------- optional: serve the web app (single-service deploys)
+if settings.static_dir:
+    import os
+
+    from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles
+
+    _static = os.path.abspath(settings.static_dir)
+    _index = os.path.join(_static, "index.html")
+    if os.path.isdir(os.path.join(_static, "assets")):
+        app.mount("/assets", StaticFiles(directory=os.path.join(_static, "assets")), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str):
+        if path.startswith("api/"):
+            return JSONResponse({"detail": "Not Found"}, status_code=404)
+        candidate = os.path.abspath(os.path.join(_static, path))
+        if path and candidate.startswith(_static + os.sep) and os.path.isfile(candidate):
+            return FileResponse(candidate)
+        return FileResponse(_index, headers={"Cache-Control": "no-cache"})

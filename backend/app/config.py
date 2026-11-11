@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +22,10 @@ class Settings(BaseSettings):
 
     # Storage
     upload_dir: str = "./uploads"
+    # disk: files in upload_dir. database: bytes stored in Postgres (for hosts with no persistent disk, e.g. free tiers)
+    upload_storage: str = "disk"
+    # When set, the API also serves the built web app from this folder (single-service deploys)
+    static_dir: str = ""
     max_upload_mb: int = 8
 
     # AI (server-level defaults; users may override with their own key in Settings)
@@ -29,6 +34,15 @@ class Settings(BaseSettings):
     ai_base_url: str = ""  # for openai_compatible (e.g. https://api.openai.com/v1, http://ollama:11434/v1)
     anthropic_api_key: str = ""
     openai_api_key: str = ""
+
+    @field_validator("database_url")
+    @classmethod
+    def _psycopg_driver(cls, v: str) -> str:
+        # Hosted Postgres providers (Neon, Render, Supabase) hand out postgres:// or postgresql:// URLs
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg://" + v[len(prefix):]
+        return v
 
     @property
     def cors_origin_list(self) -> list[str]:
