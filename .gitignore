@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+backend/uploads/
+backups/
+web/e2e/screenshots/
+web/android/app/build/
+web/android/.gradle/
+web/android/build/
+*.apk
+*.keystore

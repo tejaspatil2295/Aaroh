@@ -1,0 +1,53 @@
+# AAROH: docker compose up -d --build   ->  http://localhost:8080
+# HTTPS with automatic certificates: set DOMAIN in .env and add --profile https
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aaroh
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aaroh-dev-password}
+      POSTGRES_DB: aaroh
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aaroh"]
+      interval: 5s
+      retries: 20
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file: [./backend/.env]
+    environment:
+      DATABASE_URL: postgresql+psycopg://aaroh:${POSTGRES_PASSWORD:-aaroh-dev-password}@db:5432/aaroh
+    volumes: [uploads:/data/uploads]
+    depends_on:
+      db: { condition: service_healthy }
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    ports: ["${WEB_PORT:-8080}:80"]
+    depends_on: [api]
+
+  # Daily compressed pg_dump into ./backups (see scripts/backup.sh for retention)
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-aaroh-dev-password}
+    volumes: [./backups:/backups, ./scripts/backup.sh:/backup.sh:ro]
+    entrypoint: ["sh", "/backup.sh"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  caddy:
+    profiles: [https]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    command: caddy reverse-proxy --from ${DOMAIN:-localhost} --to web:80
+    volumes: [caddy:/data]
+    depends_on: [web]
+
+volumes: { pgdata: {}, uploads: {}, caddy: {} }
