@@ -1,3 +1,4 @@
+import base64
 import os
 import shutil
 from datetime import datetime, timezone
@@ -25,7 +26,7 @@ from ..security import encrypt_secret, hash_password, verify_password
 router = APIRouter(prefix="/users/me", tags=["account"])
 
 EXPORT_MODELS = [
-    M.Goal, M.Milestone, M.Task, M.Habit, M.HabitLog, M.Transaction, M.Budget, M.Subscription, M.FinancialGoal,
+    M.Goal, M.Milestone, M.Task, M.Habit, M.HabitLog, M.Transaction, M.Budget, M.Subscription, M.Investment, M.Liability, M.NetWorthSnapshot, M.FinancialGoal,
     M.JournalEntry, M.Attachment, M.Skill, M.RoadmapItem, M.LearningLog, M.KnowledgeNote, M.Resource,
     M.LearningItem, M.InterviewItem, M.BodyMetric, M.Workout, M.DailyActivity, M.FoodLog, M.WorkLog,
     M.Opportunity, M.AIConversation, M.AIInsight,
@@ -108,6 +109,9 @@ def _row(obj) -> dict:
     out = {}
     for col in obj.__table__.columns:
         v = getattr(obj, col.name)
+        if isinstance(v, bytes):  # photos stored in the database
+            out[col.name] = base64.b64encode(v).decode()
+            continue
         out[col.name] = v.isoformat() if hasattr(v, "isoformat") else (str(v) if v is not None and not isinstance(v, (int, float, bool, str, list, dict)) else v)
     return out
 

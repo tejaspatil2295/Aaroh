@@ -25,6 +25,7 @@ DEFAULT_AI_PERMISSIONS: dict = {
     "tasks": True,
     "goals": True,
     "finance": True,
+    "investments": True,
     "journal": False,  # journals are most sensitive: opt-in
     "learning": True,
     "fitness": True,

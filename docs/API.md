@@ -1,6 +1,6 @@
 # AAROH API reference
 
-161 operations across 90 paths. The live, interactive reference (try requests with your token) is served by the backend at **`/api/docs`** (Swagger UI) and **`/api/redoc`**. The machine-readable spec is in [`openapi.json`](openapi.json); regenerate it with:
+173 operations across 96 paths. The live, interactive reference (try requests with your token) is served by the backend at **`/api/docs`** (Swagger UI) and **`/api/redoc`**. The machine-readable spec is in [`openapi.json`](openapi.json); regenerate it with:
 
 ```bash
 cd backend && python -c "import json;from app.main import app;json.dump(app.openapi(),open('../docs/openapi.json','w'),indent=1)"
@@ -100,6 +100,19 @@ cd backend && python -c "import json;from app.main import app;json.dump(app.open
 - `GET /api/v1/finance/goals/{item_id}`
 - `PATCH /api/v1/finance/goals/{item_id}`
 - `DELETE /api/v1/finance/goals/{item_id}`
+### investments
+- `GET /api/v1/investments/asset-classes`
+- `GET /api/v1/investments/summary`
+- `GET /api/v1/investments/holdings`
+- `POST /api/v1/investments/holdings`
+- `GET /api/v1/investments/holdings/{item_id}`
+- `PATCH /api/v1/investments/holdings/{item_id}`
+- `DELETE /api/v1/investments/holdings/{item_id}`
+- `GET /api/v1/investments/liabilities`
+- `POST /api/v1/investments/liabilities`
+- `GET /api/v1/investments/liabilities/{item_id}`
+- `PATCH /api/v1/investments/liabilities/{item_id}`
+- `DELETE /api/v1/investments/liabilities/{item_id}`
 ### journal
 - `GET /api/v1/journal/tags`
 - `GET /api/v1/journal/mood`

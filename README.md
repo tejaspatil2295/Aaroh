@@ -1,6 +1,6 @@
 # AAROH – Your Personal Life OS
 
-A personal life operating system: tasks and calendar, goals and habits, money, journal, a software-engineering learning hub, fitness and nutrition, a professional work journal, a UPSC-knowledge and side-income hub, and Aaroh AI, a companion that reads (only) the data you allow and turns it into briefings, reviews and practical next steps.
+A personal life operating system: tasks and calendar, goals and habits, money, investments and net worth, journal, a software-engineering learning hub, fitness and nutrition, a professional work journal, a UPSC-knowledge and side-income hub, and Aaroh AI, a companion that reads (only) the data you allow and turns it into briefings, reviews and practical next steps.
 
 Web app + Android app (one React codebase via Capacitor) on a FastAPI + PostgreSQL backend.
 
@@ -8,8 +8,8 @@ Web app + Android app (one React codebase via Capacitor) on a FastAPI + PostgreS
 
 | Area | State |
 |---|---|
-| Backend: 10 modules, auth, AI layer, migrations | Done; 18 API tests pass (`backend/tests`) |
-| Web app: 11 screens, light/dark, mobile layout | Done; 17 end-to-end browser journeys pass (`web/e2e/run.mjs`) |
+| Backend: 11 modules, auth, AI layer, migrations | Done; 20 API tests pass (`backend/tests`) |
+| Web app: 11 screens, light/dark, mobile layout | Done; 18 end-to-end browser journeys pass (`web/e2e/run.mjs`) |
 | Free one-click hosting (Render + Neon via `render.yaml`) | Single-service image verified locally; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#0-free-hosting-render--neon-no-server-to-manage) |
 | Docker Compose stack (db, api, web, backups, optional HTTPS) | Built and verified locally |
 | Android project (Capacitor) | Generated with icons, secure token storage, local notifications |
@@ -54,7 +54,7 @@ cd web && npm run build                                  # type-check + build
 cd web && BASE_URL=http://localhost:5173 node e2e/run.mjs   # needs Playwright, a running stack and the seeded demo user
 ```
 
-API tests (18) cover auth (rotation and token-reuse detection), cross-user data isolation, every module's CRUD and summaries, smart planning, recurrence, photo uploads, settings and privacy filtering, offline AI, the OpenAI-compatible provider, the Anthropic SDK request shape, export and account deletion.
+API tests (20) cover auth (rotation and token-reuse detection), cross-user data isolation, every module's CRUD and summaries, smart planning, recurrence, photo uploads, settings and privacy filtering, offline AI, the OpenAI-compatible provider, the Anthropic SDK request shape, export and account deletion.
 
 ## Using AI
 

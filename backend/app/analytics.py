@@ -18,6 +18,9 @@ from .models import (
     Goal,
     Habit,
     HabitLog,
+    Investment,
+    Liability,
+    NetWorthSnapshot,
     InterviewItem,
     JournalEntry,
     LearningItem,
@@ -452,3 +455,152 @@ def utc(dt: datetime) -> datetime:
 
 def dec(x) -> Decimal:
     return Decimal(str(x))
+
+
+# ---------------------------------------------------------------- investments & net worth
+ASSET_LABELS = {
+    "mutual_fund": "Mutual funds", "stock": "Stocks", "etf": "ETFs", "fd": "Fixed deposits", "rd": "Recurring deposits",
+    "ppf": "PPF", "epf": "EPF / PF", "nps": "NPS", "gold": "Gold", "sgb": "Sovereign gold bonds", "bonds": "Bonds",
+    "real_estate": "Real estate", "crypto": "Crypto", "savings": "Savings / cash", "insurance_ulip": "ULIP / endowment",
+    "other": "Other",
+}
+HIGH_INTEREST_PCT = 12.0
+
+
+def _next_monthly(day: date, dom: int) -> date:
+    y, m = day.year, day.month
+    if day.day > dom:
+        m += 1
+        if m > 12:
+            m, y = 1, y + 1
+    return date(y, m, dom)
+
+
+def _avg_monthly(ctx: Ctx, day: date, months: int = 3) -> tuple[float, float]:
+    """Average monthly (expense, income) over the last N complete months; falls back to the current month."""
+    exp, inc, n = 0.0, 0.0, 0
+    d = day.replace(day=1)
+    for _ in range(months):
+        d = (d - timedelta(days=1)).replace(day=1)
+        fm = finance_month(ctx, d.strftime("%Y-%m"))
+        if fm["transaction_count"]:
+            exp, inc, n = exp + fm["total_expense"], inc + fm["total_income"], n + 1
+    if not n:
+        fm = finance_month(ctx, day.strftime("%Y-%m"))
+        return fm["total_expense"], fm["total_income"]
+    return exp / n, inc / n
+
+
+def investments_summary(ctx: Ctx, day: date, record_snapshot: bool = True) -> dict:
+    holdings = _all(ctx, Investment, Investment.active.is_(True), order=Investment.current_value.desc())
+    debts = _all(ctx, Liability, Liability.active.is_(True), order=Liability.outstanding.desc())
+    invested = sum(f(h.invested_amount) for h in holdings)
+    current = sum(f(h.current_value) for h in holdings)
+    owed = sum(f(l.outstanding) for l in debts)
+
+    rows = []
+    for h in holdings:
+        inv, cur = f(h.invested_amount), f(h.current_value)
+        years = (day - h.start_date).days / 365.25 if h.start_date else None
+        cagr = None
+        if inv > 0 and cur > 0 and years and years >= 1 and not h.sip_amount:
+            cagr = round((cur / inv) ** (1 / years) - 1, 4)
+        rows.append({
+            "id": str(h.id), "name": h.name, "asset_class": h.asset_class, "invested": round(inv, 2), "current": round(cur, 2),
+            "gain": round(cur - inv, 2), "return_pct": round((cur - inv) / inv, 4) if inv else None, "cagr": cagr,
+            "share": round(cur / current, 4) if current else 0, "risk": h.risk, "liquidity": h.liquidity,
+            "sip_amount": f(h.sip_amount) or None, "value_updated_on": h.value_updated_on,
+        })
+
+    by_class: dict[str, float] = defaultdict(float)
+    by_risk: dict[str, float] = defaultdict(float)
+    by_liquidity: dict[str, float] = defaultdict(float)
+    for h in holdings:
+        by_class[h.asset_class] += f(h.current_value)
+        by_risk[h.risk] += f(h.current_value)
+        by_liquidity[h.liquidity] += f(h.current_value)
+
+    sips = [h for h in holdings if h.sip_amount and h.sip_day]
+    sip_total = sum(f(h.sip_amount) for h in holdings if h.sip_amount)
+    upcoming = []
+    for h in sips:
+        nd = _next_monthly(day, h.sip_day)
+        if nd <= day + timedelta(days=30):
+            upcoming.append({"date": nd, "name": h.name, "amount": f(h.sip_amount), "kind": "sip"})
+    for l in debts:
+        if l.emi and l.emi_day:
+            nd = _next_monthly(day, l.emi_day)
+            if nd <= day + timedelta(days=30):
+                upcoming.append({"date": nd, "name": l.name, "amount": f(l.emi), "kind": "emi"})
+    for h in holdings:
+        if h.maturity_date and day <= h.maturity_date <= day + timedelta(days=90):
+            upcoming.append({"date": h.maturity_date, "name": h.name, "amount": f(h.current_value), "kind": "maturity"})
+    upcoming.sort(key=lambda x: x["date"])
+
+    emi_total = sum(f(l.emi) for l in debts if l.emi)
+    avg_exp, avg_inc = _avg_monthly(ctx, day)
+    liquid = by_liquidity.get("high", 0.0)
+    emergency_months = round(liquid / avg_exp, 1) if avg_exp else None
+    stale = [h.name for h in holdings if h.asset_class not in ("savings",) and (not h.value_updated_on or (day - h.value_updated_on).days > 45)]
+    high_interest = [{"name": l.name, "rate": f(l.interest_rate), "outstanding": f(l.outstanding)} for l in debts if f(l.interest_rate) >= HIGH_INTEREST_PCT]
+
+    obs: list[str] = []
+    if current:
+        top_cls, top_val = max(by_class.items(), key=lambda kv: kv[1])
+        if top_val / current > 0.6 and len(holdings) > 1:
+            obs.append(f"{round(top_val / current * 100)}% of your investments are in {ASSET_LABELS.get(top_cls, top_cls)}. Check this concentration is intentional.")
+        if by_risk.get("high", 0) / current > 0.8:
+            obs.append("Over 80% of your portfolio is marked high risk.")
+    if emergency_months is not None:
+        if emergency_months < 3:
+            obs.append(f"Easily accessible money covers about {emergency_months} month(s) of expenses. A common guideline is 3-6 months before investing more aggressively.")
+        elif emergency_months < 6:
+            obs.append(f"Emergency buffer covers about {emergency_months} months of expenses (guideline 3-6).")
+    if high_interest and sip_total:
+        names = ", ".join(f"{d['name']} at {d['rate']:g}%" for d in high_interest[:3])
+        obs.append(f"You carry high-interest debt ({names}) while investing ₹{sip_total:,.0f}/month. Paying that debt down is usually a guaranteed return at that rate.")
+    elif high_interest:
+        obs.append("High-interest debt: " + ", ".join(f"{d['name']} at {d['rate']:g}%" for d in high_interest[:3]) + ".")
+    if avg_inc and emi_total / avg_inc > 0.4:
+        obs.append(f"EMIs take {round(emi_total / avg_inc * 100)}% of your average monthly income; lenders usually get cautious above 40-50%.")
+    if avg_inc and sip_total:
+        obs.append(f"You invest ₹{sip_total:,.0f}/month through SIPs, about {round(sip_total / avg_inc * 100)}% of average monthly income.")
+    if stale:
+        obs.append(f"{len(stale)} holding(s) have values older than 45 days ({', '.join(stale[:3])}{'…' if len(stale) > 3 else ''}). Update them for an accurate net worth.")
+    if not holdings:
+        obs.append("Add your investments (mutual funds, PPF, EPF, FDs, stocks, gold) to see your net worth and allocation.")
+
+    net_worth = current - owed
+    if record_snapshot and (holdings or debts):
+        snap = ctx.db.scalar(select(NetWorthSnapshot).where(visible(NetWorthSnapshot, ctx), NetWorthSnapshot.owner_id == ctx.user_id, NetWorthSnapshot.date == day))
+        if snap is None:
+            snap = NetWorthSnapshot(owner_id=ctx.user_id, workspace_id=ctx.workspace_id, date=day, assets=0, liabilities=0, invested=0)
+            ctx.db.add(snap)
+        snap.assets, snap.liabilities, snap.invested = Decimal(str(round(current, 2))), Decimal(str(round(owed, 2))), Decimal(str(round(invested, 2)))
+        ctx.db.commit()
+    history = [
+        {"date": s.date, "net_worth": round(f(s.assets) - f(s.liabilities), 2), "assets": f(s.assets), "liabilities": f(s.liabilities), "invested": f(s.invested)}
+        for s in _all(ctx, NetWorthSnapshot, NetWorthSnapshot.owner_id == ctx.user_id, NetWorthSnapshot.date >= day - timedelta(days=730), order=NetWorthSnapshot.date)
+    ]
+    return {
+        "net_worth": round(net_worth, 2),
+        "total_assets": round(current, 2),
+        "total_invested": round(invested, 2),
+        "total_gain": round(current - invested, 2),
+        "total_return_pct": round((current - invested) / invested, 4) if invested else None,
+        "total_liabilities": round(owed, 2),
+        "monthly_sip": round(sip_total, 2),
+        "monthly_emi": round(emi_total, 2),
+        "avg_monthly_expense": round(avg_exp, 2),
+        "avg_monthly_income": round(avg_inc, 2),
+        "emergency_fund_months": emergency_months,
+        "allocation": {k: round(v, 2) for k, v in sorted(by_class.items(), key=lambda kv: -kv[1])},
+        "by_risk": {k: round(v, 2) for k, v in by_risk.items()},
+        "by_liquidity": {k: round(v, 2) for k, v in by_liquidity.items()},
+        "holdings": rows,
+        "liabilities": [{"id": str(l.id), "name": l.name, "kind": l.kind, "outstanding": f(l.outstanding), "rate": f(l.interest_rate) or None, "emi": f(l.emi) or None} for l in debts],
+        "upcoming": upcoming,
+        "stale_values": stale,
+        "observations": obs,
+        "history": history,
+    }

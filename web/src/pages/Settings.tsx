@@ -25,7 +25,7 @@ const PREF_FIELDS: { key: string; label: string; type: "number" | "time" | "text
   { key: "timezone", label: "Time zone", type: "text" },
 ];
 
-const MODULE_LABELS: Record<string, string> = { profile: "Profile & background", tasks: "Tasks", goals: "Goals & habits", finance: "Finance", journal: "Personal journal", learning: "Learning", fitness: "Fitness & health", work: "Work journal", side_income: "Side income" };
+const MODULE_LABELS: Record<string, string> = { profile: "Profile & background", tasks: "Tasks", goals: "Goals & habits", finance: "Finance", investments: "Investments & loans", journal: "Personal journal", learning: "Learning", fitness: "Fitness & health", work: "Work journal", side_income: "Side income" };
 
 export default function SettingsPage() {
   const qc = useQueryClient();

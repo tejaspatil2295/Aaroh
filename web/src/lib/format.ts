@@ -37,3 +37,13 @@ export const greeting = () => {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 };
+
+/** Indian short form for large amounts: ₹4.6L, ₹1.25Cr. */
+export const moneyShort = (n: number | string | null | undefined) => {
+  const v = Number(n || 0);
+  const a = Math.abs(v);
+  const sign = v < 0 ? "−" : "";
+  if (a >= 1e7) return `${sign}₹${(a / 1e7).toFixed(2).replace(/\.?0+$/, "")}Cr`;
+  if (a >= 1e5) return `${sign}₹${(a / 1e5).toFixed(2).replace(/\.?0+$/, "")}L`;
+  return money(v);
+};

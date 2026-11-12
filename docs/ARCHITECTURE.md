@@ -72,6 +72,9 @@ All tables below except identity tables also carry `id (uuid)`, `owner_id`, `wor
 | | `budgets` | month YYYY-MM, category (`__total__` = overall), amount |
 | | `subscriptions` | amount, billing_cycle, next_due_date, active |
 | | `financial_goals` | target_amount, saved_amount, target_date |
+| Investments | `investments` | asset_class (MF, stock, ETF, FD, RD, PPF, EPF, NPS, gold, SGB, bonds, real estate, crypto, savings...), invested_amount, current_value, units, SIP amount/day, interest_rate, maturity_date, risk, liquidity, financial_goal_id, value_updated_on |
+| | `liabilities` | kind (home/car/personal/education loan, credit card...), outstanding, interest_rate, emi, emi_day, end_date |
+| | `net_worth_snapshots` | one row per day: assets, liabilities, invested (net-worth trend) |
 | Journal | `journal_entries` | kind, entry_date, mood, energy, tags, decision_outcome, hide_from_ai |
 | | `attachments` | entity_type/entity_id, content_type, storage_path (photos) |
 | Learning | `skills`, `roadmap_items`, `learning_logs`, `knowledge_notes`, `resources`, `learning_items`, `interview_items` | levels 0-5, roadmap order/done, minutes per day, snippets, courses/projects/certs, confidence 1-5 |
