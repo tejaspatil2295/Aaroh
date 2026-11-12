@@ -8,5 +8,5 @@ adb exec-out screencap -p > android-1-launch.png
 pid=$(adb shell pidof app.aaroh.lifeos | tr -d '\r')
 echo "app pid: $pid"
 adb forward tcp:9222 "localabstract:webview_devtools_remote_${pid}"
-NODE_PATH="$(npm root -g)" node web/e2e/android-device.cjs
-adb exec-out screencap -p > android-3-final.png
+node web/e2e/android-device.cjs
+adb exec-out screencap -p > android-4-device.png
