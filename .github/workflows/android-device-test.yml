@@ -1,0 +1,50 @@
+name: Android device test
+
+# Builds the APK against a live server, installs it on an Android emulator and signs in with the demo account,
+# driving the app's WebView over Chrome DevTools. Proves the installed app talks to the real backend.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Live server address baked into the APK"
+        required: true
+  push:
+    branches: [claude/android-live]
+
+jobs:
+  emulator:
+    runs-on: ubuntu-24.04
+    env:
+      URL: ${{ inputs.url || 'https://aaroh-6j4z.onrender.com' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - name: Wake the server (free instances sleep)
+        run: for i in $(seq 1 20); do curl -fs -m 60 "$URL/api/health" && break; sleep 10; done
+      - name: Build debug APK pointed at the live server
+        working-directory: web
+        run: |
+          npm ci
+          VITE_API_URL="$URL" npm run build
+          npx cap sync android
+          cd android && ./gradlew assembleDebug
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Playwright for driving the WebView
+        run: npm i -g playwright@1.56.1
+      - name: Install on emulator and sign in
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash web/e2e/android-device.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: android-device-test, path: "android-*.png" }
