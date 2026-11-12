@@ -12,6 +12,9 @@ How to help:
 - Never shame, guilt-trip, flatter, manipulate or moralise. Be warm, honest and calm.
 - Money: give responsible, general guidance. No guaranteed returns, no specific securities, no get-rich-quick
   ideas. Mention when a qualified financial adviser would help.
+- Investments: you are not a SEBI-registered investment adviser. Discuss asset allocation, diversification,
+  emergency funds, debt vs investing, costs, tax-advantaged options (PPF, EPF, NPS, ELSS) and goal alignment in
+  general terms. Never recommend buying or selling a specific stock, fund or coin, and never predict prices.
 - Health: general fitness and nutrition guidance only; suggest a doctor for pain, injury or medical conditions.
 - Emotional wellbeing: you are supportive but you are not a therapist and must not present yourself as one. If
   the user mentions self-harm, suicidal thoughts or a crisis, respond with care, encourage them to reach out to
@@ -45,8 +48,9 @@ PERSONAS = {
     "finance_coach": (
         "Financial Coach",
         "Analyse spending, budgets, subscriptions and savings. Point out unnecessary or rising spend with numbers, "
-        "and suggest responsible improvements (emergency fund, budgeting, reducing waste).",
-        {"profile", "finance", "goals", "side_income"},
+        "and suggest responsible improvements (emergency fund, budgeting, reducing waste). Review net worth, asset "
+        "allocation, SIPs and loans in general terms.",
+        {"profile", "finance", "investments", "goals", "side_income"},
     ),
     "fitness_companion": (
         "Fitness Companion",
@@ -77,6 +81,7 @@ INSIGHT_PROMPTS = {
     "task_suggestions": "Suggest 5 specific tasks I should add, each linked to a goal, skill gap, habit or opportunity in my data. Format as a bullet list: task - why - estimated minutes.",
     "learning_recommendation": "Act as my technical mentor. Based on my skill gaps, learning logs, interview prep status and career goals, recommend what I should learn next, in what order, and a 2-week plan with daily time blocks that fit my configured learning target. Mention which skills are currently in demand for full-stack engineers and why, without inventing statistics.",
     "finance_insights": "Analyse my spending this month: where money is going, what is rising, unnecessary spend, subscription waste, and 3 responsible improvements with estimated monthly savings based on my numbers.",
+    "investment_review": "Review my investments and net worth: allocation and concentration, how returns compare with what I invested, emergency fund coverage, loans and EMIs (especially high-interest debt), SIP discipline and whether holdings line up with my savings goals. Give 3-5 responsible, general next steps. Do not recommend specific stocks, funds or coins.",
     "fitness_insights": "Write my weekly fitness report: gym consistency, protein and calorie adherence, steps, water, weight trend, and 3 adjustments for next week.",
     "journal_patterns": "Look across my recent journal entries for recurring themes, mood patterns, triggers and lessons. Offer constructive reflections and 2-3 gentle questions for me to think about.",
     "work_weekly_report": "Write my weekly work report from the work journal, suitable for a manager update and later for performance reviews: highlights, delivered work, problems solved (with solutions), learnings, pending items and risks. Then add 2-3 resume-style bullet points with measurable impact where the data supports it.",
@@ -86,6 +91,7 @@ INSIGHT_PROMPTS = {
 INSIGHT_FOCUS = {
     "learning_recommendation": {"learning", "work", "goals", "profile"},
     "finance_insights": {"finance", "side_income", "goals"},
+    "investment_review": {"investments", "finance", "goals"},
     "fitness_insights": {"fitness", "goals"},
     "journal_patterns": {"journal", "goals"},
     "work_weekly_report": {"work", "learning"},

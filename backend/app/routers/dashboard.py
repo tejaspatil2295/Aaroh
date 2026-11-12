@@ -20,6 +20,13 @@ def _t(t: Task) -> dict:
     }
 
 
+def _inv(ctx: Ctx, day) -> dict | None:
+    inv = A.investments_summary(ctx, day, record_snapshot=False)
+    if not inv["holdings"] and not inv["liabilities"]:
+        return None
+    return {k: inv[k] for k in ("net_worth", "total_assets", "total_invested", "total_gain", "total_return_pct", "total_liabilities", "monthly_sip")}
+
+
 @router.get("", summary="Everything for 'My life at a glance'")
 def dashboard(ctx: Ctx = Depends(get_ctx)):
     day = A.today(ctx)
@@ -63,6 +70,7 @@ def dashboard(ctx: Ctx = Depends(get_ctx)):
             "budget_used_pct": fm["budget_used_pct"],
             "top_categories": dict(list(fm["by_category"].items())[:4]),
         },
+        "investments": _inv(ctx, day),
         "fitness": A.fitness_day(ctx, day),
         "fitness_week": A.fitness_week(ctx, day),
         "learning": {k: learn[k] for k in ("today_minutes", "daily_target_minutes", "week_minutes", "week_target_minutes", "courses_in_progress")},

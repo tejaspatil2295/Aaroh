@@ -102,6 +102,28 @@ await step("add an expense and see it in transactions", async () => {
   await page.getByText(`E2E biryani ${uniq}`).waitFor();
 });
 
+await step("investments: net worth, add a holding, update its value", async () => {
+  await page.goto(`${BASE}/investments`);
+  await page.getByText("Net worth over time").waitFor();
+  await page.getByText("Allocation").waitFor();
+  await shot("06b-investments");
+  await page.getByRole("button", { name: "Investment", exact: true }).click();
+  await page.getByLabel("Name *").fill(`E2E gold ${uniq}`);
+  await page.getByLabel("Type *").selectOption("gold");
+  await page.getByLabel("Total invested (₹) *").fill("10000");
+  await page.getByLabel("Current value (₹) *").fill("12500");
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("tab", { name: "Holdings" }).click();
+  await page.getByText(`E2E gold ${uniq}`).click();
+  await page.getByLabel("Current value (₹) *").fill("13000");
+  await page.locator("form").getByRole("button", { name: "Save" }).click();
+  await page.getByText("+₹3,000").first().waitFor();
+  await page.getByRole("tab", { name: "Loans" }).click();
+  await page.getByText("Credit card balance").waitFor();
+  await page.goto(`${BASE}/`);
+  await page.getByText(/Net worth ₹/).waitFor();
+});
+
 await step("journal entry with search", async () => {
   await page.goto(`${BASE}/journal`);
   await page.getByRole("button", { name: "Entry" }).click();

@@ -62,6 +62,10 @@ def build_context(ctx: Ctx, focus: set[str] | None = None) -> tuple[str, list[st
         out.append(
             f"## Finance (this month)\n{_j(fm)}\nSubscriptions: {_j(A.subscriptions_monthly(ctx))}\nObservations: {_j(A.spending_flags(ctx, month))}"
         )
+    if "investments" in allowed:
+        inv = A.investments_summary(ctx, day, record_snapshot=False)
+        inv["history"] = inv["history"][-6:]
+        out.append(f"## Investments & net worth (values entered by the user)\n{_j(inv)}")
     if "fitness" in allowed:
         out.append(f"## Fitness\nToday: {_j(A.fitness_day(ctx, day))}\nLast 7 days: {_j(A.fitness_week(ctx, day))}")
     if "learning" in allowed:

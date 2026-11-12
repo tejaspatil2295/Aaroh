@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Tasks = lazy(() => import("./pages/Tasks"));
 const Finance = lazy(() => import("./pages/Finance"));
+const Investments = lazy(() => import("./pages/Investments"));
 const Journal = lazy(() => import("./pages/Journal"));
 const Learning = lazy(() => import("./pages/Learning"));
 const Fitness = lazy(() => import("./pages/Fitness"));
@@ -40,6 +41,7 @@ function Gate() {
           ["/", Dashboard],
           ["/tasks", Tasks],
           ["/finance", Finance],
+          ["/investments", Investments],
           ["/journal", Journal],
           ["/learning", Learning],
           ["/fitness", Fitness],

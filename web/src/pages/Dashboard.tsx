@@ -6,7 +6,7 @@ import { get, post, put } from "../api/client";
 import { InsightCard } from "../components/AI";
 import { ChartBox, axis, tip } from "../components/charts";
 import { Badge, Card, Empty, Loading, PageHeader, Progress, Ring, Stat, cx } from "../components/ui";
-import { fmtDate, fmtTime, greeting, money, num, pct, relDay, todayIso } from "../lib/format";
+import { fmtDate, fmtTime, greeting, money, moneyShort, num, pct, relDay, todayIso } from "../lib/format";
 import { useInvalidate } from "../lib/hooks";
 
 const PRIORITY_TONE: Record<string, string> = { urgent: "bad", high: "warn", medium: "accent", low: "neutral" };
@@ -92,7 +92,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat icon={<Wallet className="size-3.5" />} label="Spent today" value={money(d.finance.today_expense)} sub={d.finance.budget ? `${pct(d.finance.budget_used_pct)} of ${money(d.finance.budget)} this month` : `${money(d.finance.month_expense)} this month`} />
+        <Stat icon={<Wallet className="size-3.5" />} label="Spent today" value={money(d.finance.today_expense)} sub={<>{d.finance.budget ? `${pct(d.finance.budget_used_pct)} of ${money(d.finance.budget)} this month` : `${money(d.finance.month_expense)} this month`}{d.investments && <Link to="/investments" className="mt-0.5 block text-accent">Net worth {moneyShort(d.investments.net_worth)}</Link>}</>} />
         <Stat icon={<Flame className="size-3.5" />} label="Protein" value={`${num(f.protein_g)} g`} sub={<Progress className="mt-1.5" value={f.protein_g / f.protein_target} tone={f.protein_g >= f.protein_target ? "good" : "accent"} />} />
         <Stat icon={<GraduationCap className="size-3.5" />} label="Learning" value={`${d.learning.today_minutes} min`} sub={`${Math.round(d.learning.week_minutes / 60 * 10) / 10} / ${d.learning.week_target_minutes / 60} h this week`} />
         <Stat icon={<Footprints className="size-3.5" />} label="Steps" value={num(f.steps)} sub={<Progress className="mt-1.5" value={f.steps / f.steps_target} />} />

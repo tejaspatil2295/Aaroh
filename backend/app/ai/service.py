@@ -39,7 +39,7 @@ def insight_period(ctx: Ctx, kind: str):
     day = A.today(ctx)
     if kind in ("weekly_review", "fitness_insights", "work_weekly_report", "habit_analysis"):
         return day - timedelta(days=day.weekday())
-    if kind in ("monthly_review", "finance_insights"):
+    if kind in ("monthly_review", "finance_insights", "investment_review"):
         return day.replace(day=1)
     return day
 
@@ -58,7 +58,7 @@ def generate_insight(ctx: Ctx, kind: str, force: bool = False) -> AIInsight:
         persona={
             "finance_insights": "finance_coach", "fitness_insights": "fitness_companion",
             "learning_recommendation": "tech_teacher", "journal_patterns": "journal_companion",
-            "work_weekly_report": "career_mentor",
+            "work_weekly_report": "career_mentor", "investment_review": "finance_coach",
         }.get(kind, "life_coach"),
         messages=[{"role": "user", "content": INSIGHT_PROMPTS[kind]}],
         focus=INSIGHT_FOCUS.get(kind),

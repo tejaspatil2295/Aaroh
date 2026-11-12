@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { BookOpen, Briefcase, CheckSquare, Dumbbell, GraduationCap, LayoutDashboard, Lightbulb, MoreHorizontal, Settings, Sparkles, Wallet, X } from "lucide-react";
+import { BookOpen, Briefcase, CheckSquare, Dumbbell, GraduationCap, LayoutDashboard, Lightbulb, LineChart, MoreHorizontal, Settings, Sparkles, Wallet, X } from "lucide-react";
 import { cx } from "./ui";
 import { useAuth } from "../auth/AuthContext";
 import { useReminderSync } from "../lib/useReminderSync";
@@ -10,6 +10,7 @@ export const NAV = [
   { to: "/tasks", label: "Plan", icon: CheckSquare },
   { to: "/companion", label: "Aaroh AI", icon: Sparkles },
   { to: "/finance", label: "Money", icon: Wallet },
+  { to: "/investments", label: "Investments", icon: LineChart },
   { to: "/fitness", label: "Fitness", icon: Dumbbell },
   { to: "/learning", label: "Learning", icon: GraduationCap },
   { to: "/work", label: "Work", icon: Briefcase },

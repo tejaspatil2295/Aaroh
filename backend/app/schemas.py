@@ -79,7 +79,7 @@ class DeleteAccountIn(Base):
     confirm: Literal["DELETE"]
 
 
-AI_MODULES = ["tasks", "goals", "finance", "journal", "learning", "fitness", "work", "side_income", "profile"]
+AI_MODULES = ["tasks", "goals", "finance", "investments", "journal", "learning", "fitness", "work", "side_income", "profile"]
 
 
 class SettingsOut(BaseModel):
@@ -194,6 +194,47 @@ class FinancialGoalIn(Base):
     target_amount: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
     saved_amount: Decimal = Field(default=Decimal(0), ge=0, max_digits=14, decimal_places=2)
     target_date: Optional[date] = None
+    notes: str = ""
+
+
+# ---------------------------------------------------------------- investments
+AssetClass = Literal[
+    "mutual_fund", "stock", "etf", "fd", "rd", "ppf", "epf", "nps", "gold", "sgb", "bonds", "real_estate",
+    "crypto", "savings", "insurance_ulip", "other",
+]
+
+
+class InvestmentIn(Base):
+    name: str = Field(min_length=1, max_length=160)
+    asset_class: AssetClass = "mutual_fund"
+    platform: str = Field(default="", max_length=80)
+    invested_amount: Decimal = Field(default=Decimal(0), ge=0, max_digits=14, decimal_places=2)
+    current_value: Decimal = Field(default=Decimal(0), ge=0, max_digits=14, decimal_places=2)
+    units: Optional[Decimal] = Field(default=None, ge=0, max_digits=18, decimal_places=6)
+    start_date: Optional[date] = None
+    maturity_date: Optional[date] = None
+    interest_rate: Optional[Decimal] = Field(default=None, ge=0, le=100, max_digits=5, decimal_places=2)
+    sip_amount: Optional[Decimal] = Field(default=None, ge=0, max_digits=12, decimal_places=2)
+    sip_day: Optional[int] = Field(default=None, ge=1, le=28)
+    risk: Literal["low", "medium", "high"] = "medium"
+    liquidity: Literal["high", "medium", "locked"] = "medium"
+    financial_goal_id: Optional[uuid.UUID] = None
+    value_updated_on: Optional[date] = None
+    active: bool = True
+    notes: str = ""
+
+
+class LiabilityIn(Base):
+    name: str = Field(min_length=1, max_length=160)
+    kind: Literal["home_loan", "car_loan", "personal_loan", "education_loan", "credit_card", "gold_loan", "borrowed_family", "other"] = "personal_loan"
+    lender: str = Field(default="", max_length=80)
+    principal: Optional[Decimal] = Field(default=None, ge=0, max_digits=14, decimal_places=2)
+    outstanding: Decimal = Field(default=Decimal(0), ge=0, max_digits=14, decimal_places=2)
+    interest_rate: Optional[Decimal] = Field(default=None, ge=0, le=100, max_digits=5, decimal_places=2)
+    emi: Optional[Decimal] = Field(default=None, ge=0, max_digits=12, decimal_places=2)
+    emi_day: Optional[int] = Field(default=None, ge=1, le=28)
+    end_date: Optional[date] = None
+    active: bool = True
     notes: str = ""
 
 
@@ -429,7 +470,7 @@ class InsightOut(BaseModel):
 InsightKind = Literal[
     "morning_briefing", "evening_review", "weekly_review", "monthly_review", "task_suggestions",
     "learning_recommendation", "finance_insights", "fitness_insights", "journal_patterns", "work_weekly_report",
-    "habit_analysis",
+    "habit_analysis", "investment_review",
 ]
 
 

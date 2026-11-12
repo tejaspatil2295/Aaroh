@@ -68,6 +68,17 @@ def insight(ctx: Ctx, kind: str) -> str:
             lines.append(f"**Money this month**: spent ₹{fm['total_expense']:,.0f}, earned ₹{fm['total_income']:,.0f}, savings rate {_pct(fm['savings_rate'])}.")
             lines += [f"- {k.replace('_', ' ').title()}: ₹{v:,.0f}" for k, v in list(fm["by_category"].items())[:5]]
             lines += [f"- {flag}" for flag in A.spending_flags(ctx, month)]
+    if perms.get("investments", True) and kind in ("investment_review", "monthly_review"):
+        inv = A.investments_summary(ctx, day, record_snapshot=False)
+        ret = f" ({inv['total_return_pct'] * 100:+.1f}%)" if inv["total_return_pct"] is not None else ""
+        lines.append(f"**Net worth**: ₹{inv['net_worth']:,.0f}. Investments ₹{inv['total_assets']:,.0f} on ₹{inv['total_invested']:,.0f} invested{ret}; loans ₹{inv['total_liabilities']:,.0f}.")
+        if kind == "investment_review":
+            lines.append("**Allocation**")
+            total = inv["total_assets"] or 1
+            lines += [f"- {A.ASSET_LABELS.get(k, k)}: ₹{v:,.0f} ({v / total * 100:.0f}%)" for k, v in list(inv["allocation"].items())[:6]]
+            if inv["monthly_sip"]:
+                lines.append(f"- Monthly SIPs: ₹{inv['monthly_sip']:,.0f}. EMIs: ₹{inv['monthly_emi']:,.0f}.")
+        lines += [f"- {o}" for o in inv["observations"]]
     if perms.get("work", True) and kind == "work_weekly_report":
         ww = A.work_week(ctx, day)
         lines.append(f"**Work week**: {ww['days_logged']} day(s) logged, {ww['hours']} h. Hours by project: {ww['hours_by_project']}")

@@ -282,3 +282,54 @@ def test_export_and_delete_account(client):
     assert client.request("DELETE", f"{API}/users/me", headers=h, json={"password": "S3cure-pass!", "confirm": "DELETE"}).status_code == 204
     assert client.get(f"{API}/users/me", headers=h).status_code == 401
     assert client.post(f"{API}/auth/login", json={"email": u["email"], "password": "S3cure-pass!"}).status_code == 401
+
+
+# ---------------------------------------------------------------- investments
+def test_investments_net_worth_and_observations(client, user):
+    h = user["headers"]
+    # A month of spending so the emergency-fund ratio has data
+    client.post(f"{API}/finance/transactions", headers=h, json={"kind": "income", "amount": 100000, "category": "salary", "date": TODAY})
+    client.post(f"{API}/finance/transactions", headers=h, json={"kind": "expense", "amount": 40000, "category": "rent", "date": TODAY})
+    goal = client.post(f"{API}/finance/goals", headers=h, json={"name": "Retirement", "target_amount": 10000000}).json()
+    mf = client.post(f"{API}/investments/holdings", headers=h, json={
+        "name": "Nifty 50 index fund", "asset_class": "mutual_fund", "invested_amount": 200000, "current_value": 260000,
+        "sip_amount": 10000, "sip_day": 5, "risk": "high", "liquidity": "medium", "financial_goal_id": goal["id"]})
+    assert mf.status_code == 201, mf.text
+    assert mf.json()["value_updated_on"] == TODAY
+    client.post(f"{API}/investments/holdings", headers=h, json={"name": "PPF", "asset_class": "ppf", "invested_amount": 150000, "current_value": 180000, "risk": "low", "liquidity": "locked"})
+    client.post(f"{API}/investments/holdings", headers=h, json={"name": "Savings account", "asset_class": "savings", "invested_amount": 50000, "current_value": 50000, "risk": "low", "liquidity": "high"})
+    loan = client.post(f"{API}/investments/liabilities", headers=h, json={"name": "Credit card", "kind": "credit_card", "outstanding": 30000, "interest_rate": 36, "emi": 5000, "emi_day": 10})
+    assert loan.status_code == 201
+    bad = client.post(f"{API}/investments/holdings", headers=h, json={"name": "X", "asset_class": "lottery"})
+    assert bad.status_code == 422
+
+    s = client.get(f"{API}/investments/summary", headers=h).json()
+    assert s["total_assets"] == 490000 and s["total_invested"] == 400000 and s["total_liabilities"] == 30000
+    assert s["net_worth"] == 460000 and s["monthly_sip"] == 10000 and s["monthly_emi"] == 5000
+    assert list(s["allocation"])[0] == "mutual_fund"
+    assert s["emergency_fund_months"] == 1.2  # 50,000 liquid / 40,000 monthly spend
+    text = " ".join(s["observations"])
+    assert "Credit card at 36%" in text and "month(s) of expenses" in text
+    assert {u["kind"] for u in s["upcoming"]} == {"sip", "emi"}
+    assert s["history"][-1]["net_worth"] == 460000
+
+    # Changing the value restamps the date; the dashboard and the AI context include net worth
+    upd = client.patch(f"{API}/investments/holdings/{mf.json()['id']}", headers=h, json={"current_value": 270000, "value_updated_on": "2020-01-01"})
+    assert upd.json()["value_updated_on"] == TODAY
+    assert client.get(f"{API}/dashboard", headers=h).json()["investments"]["net_worth"] == 470000
+    ctx_text = client.get(f"{API}/ai/context-preview", headers=h).json()
+    assert "Investments & net worth" in str(ctx_text)
+    ins = client.post(f"{API}/ai/insights", headers=h, json={"kind": "investment_review"}).json()
+    assert "Net worth" in ins["content"] and ins["is_fallback"] is True
+
+    # Privacy: turning investments off removes it from the AI context
+    client.patch(f"{API}/users/me/settings", headers=h, json={"ai_permissions": {"investments": False}})
+    assert "Investments & net worth" not in str(client.get(f"{API}/ai/context-preview", headers=h).json())
+
+
+def test_investments_are_private_to_their_owner(client, user):
+    h = user["headers"]
+    inv = client.post(f"{API}/investments/holdings", headers=h, json={"name": "Gold", "asset_class": "gold", "current_value": 5000}).json()
+    other = make_user(client, "Other")["headers"]
+    assert client.get(f"{API}/investments/holdings/{inv['id']}", headers=other).status_code == 404
+    assert client.get(f"{API}/investments/summary", headers=other).json()["holdings"] == []

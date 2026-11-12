@@ -125,6 +125,8 @@ def run() -> None:
     add(M.FinancialGoal(**own, name="Emergency fund", target_amount=Decimal(300000), saved_amount=Decimal(118000), target_date=today + timedelta(days=300)))
     add(M.FinancialGoal(**own, name="New laptop for side projects", target_amount=Decimal(120000), saved_amount=Decimal(35000), target_date=today + timedelta(days=150)))
 
+    seed_investments(db, own, today, rnd)
+
     # ---------------- side income
     opp1 = add(M.Opportunity(**own, title="1:1 UPSC mentorship (answer-writing & strategy)", category="upsc_mentorship", status="validating",
                              description="Weekend 1:1 sessions for Mains aspirants.", estimated_investment=Decimal(2000), est_monthly_low=Decimal(4000),
@@ -233,13 +235,45 @@ def run() -> None:
     print(f"Seeded demo user {DEMO_EMAIL} / {DEMO_PASSWORD}")
 
 
+def seed_investments(db, own: dict, today: date, rnd: random.Random) -> None:
+    """Demo holdings, loans and net-worth history (also back-fills older demo accounts that predate investments)."""
+    def add(obj):
+        db.add(obj)
+        return obj
+
+    D = Decimal
+    for name, cls, platform, inv, cur, extra in [
+        ("Nifty 50 index fund", "mutual_fund", "Groww", 168000, 201500, dict(sip_amount=D(8000), sip_day=5, risk="high", start_date=today - timedelta(days=700))),
+        ("Flexi cap fund", "mutual_fund", "Groww", 72000, 79800, dict(sip_amount=D(4000), sip_day=10, risk="high", start_date=today - timedelta(days=540))),
+        ("ELSS tax saver", "mutual_fund", "Zerodha Coin", 45000, 51200, dict(sip_amount=D(2500), sip_day=15, risk="high", start_date=today - timedelta(days=500))),
+        ("Employee PF", "epf", "EPFO", 186000, 214000, dict(risk="low", liquidity="locked", interest_rate=D("8.25"))),
+        ("PPF account", "ppf", "SBI", 90000, 101300, dict(risk="low", liquidity="locked", interest_rate=D("7.10"), maturity_date=today + timedelta(days=365 * 12))),
+        ("Bank FD", "fd", "HDFC Bank", 100000, 104600, dict(risk="low", liquidity="medium", interest_rate=D("7.25"), maturity_date=today + timedelta(days=60))),
+        ("Sovereign gold bond", "sgb", "RBI via Zerodha", 30000, 38400, dict(risk="medium", liquidity="locked")),
+        ("Savings account", "savings", "SBI", 118000, 118000, dict(risk="low", liquidity="high")),
+    ]:
+        add(M.Investment(**own, name=name, asset_class=cls, platform=platform, invested_amount=D(inv), current_value=D(cur),
+                         value_updated_on=today - timedelta(days=rnd.randint(2, 20)), **{"liquidity": "medium", **extra}))
+    add(M.Liability(**own, name="Two-wheeler loan", kind="car_loan", lender="Bajaj Finance", principal=D(90000), outstanding=D(38500),
+                    interest_rate=D("11.5"), emi=D(4200), emi_day=7, end_date=today + timedelta(days=270)))
+    add(M.Liability(**own, name="Credit card balance", kind="credit_card", lender="ICICI", outstanding=D(14200), interest_rate=D("42")))
+    for i in range(6, 0, -1):  # a few months of net-worth history
+        add(M.NetWorthSnapshot(**own, date=today - timedelta(days=30 * i), assets=D(820000 + (6 - i) * 21000), liabilities=D(78000 - (6 - i) * 4000), invested=D(760000 + (6 - i) * 15000)))
+
+
 if __name__ == "__main__":
     import sys
 
     _ = timezone
     if "--if-missing" in sys.argv:
         with SessionLocal() as _db:
-            if _db.scalar(select(M.User).where(M.User.email == DEMO_EMAIL)):
+            demo = _db.scalar(select(M.User).where(M.User.email == DEMO_EMAIL))
+            if demo:
+                if not _db.scalar(select(M.Investment.id).where(M.Investment.owner_id == demo.id).limit(1)):
+                    ws = _db.scalar(select(M.WorkspaceMember.workspace_id).where(M.WorkspaceMember.user_id == demo.id))
+                    seed_investments(_db, dict(owner_id=demo.id, workspace_id=ws), datetime.now(IST).date(), random.Random(42))
+                    _db.commit()
+                    print("Added demo investments to the existing demo user")
                 print("Demo user already exists; not re-seeding")
                 sys.exit(0)
     run()

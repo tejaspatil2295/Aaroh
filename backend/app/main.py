@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from .config import get_settings
 from .db import SessionLocal
-from .routers import ai, auth, dashboard, finance, fitness, journal, learning, planner, users, work_side
+from .routers import ai, auth, dashboard, finance, fitness, investments, journal, learning, planner, users, work_side
 
 log = logging.getLogger("aaroh")
 settings = get_settings()
@@ -51,7 +51,7 @@ app.include_router(auth.router, prefix=API)
 app.include_router(users.router, prefix=API)
 app.include_router(dashboard.router, prefix=API)
 app.include_router(ai.router, prefix=API)
-for module in (planner, finance, journal, learning, fitness, work_side):
+for module in (planner, finance, investments, journal, learning, fitness, work_side):
     for r in module.routers:
         app.include_router(r, prefix=API)
 

@@ -218,6 +218,54 @@ class FinancialGoal(OwnedMixin, Base):
     notes: Mapped[str] = mapped_column(Text, default="")
 
 
+# ---------------------------------------------------------------- investments & net worth
+class Investment(OwnedMixin, Base):
+    """A holding: mutual fund, stock, FD, PPF, EPF, NPS, gold, property, crypto... Values are entered by the user."""
+    __tablename__ = "investments"
+    name: Mapped[str] = mapped_column(String(160))
+    asset_class: Mapped[str] = mapped_column(String(32), default="mutual_fund", index=True)
+    platform: Mapped[str] = mapped_column(String(80), default="")  # Zerodha, Groww, bank, post office...
+    invested_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
+    current_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
+    units: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    maturity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    interest_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)  # % p.a. for FD/RD/PPF/bonds
+    sip_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    sip_day: Mapped[int | None] = mapped_column(Integer, nullable=True)  # day of month 1-28
+    risk: Mapped[str] = mapped_column(String(8), default="medium")  # low | medium | high
+    liquidity: Mapped[str] = mapped_column(String(12), default="medium")  # high (days) | medium | locked
+    financial_goal_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("financial_goals.id", ondelete="SET NULL"), nullable=True)
+    value_updated_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+
+
+class Liability(OwnedMixin, Base):
+    __tablename__ = "liabilities"
+    name: Mapped[str] = mapped_column(String(160))
+    kind: Mapped[str] = mapped_column(String(24), default="personal_loan")
+    lender: Mapped[str] = mapped_column(String(80), default="")
+    principal: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
+    outstanding: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
+    interest_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    emi: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    emi_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+
+
+class NetWorthSnapshot(OwnedMixin, Base):
+    """One row per user per day, written whenever the investments summary is computed (for the trend chart)."""
+    __tablename__ = "net_worth_snapshots"
+    __table_args__ = (UniqueConstraint("owner_id", "workspace_id", "date"),)
+    date: Mapped[date] = mapped_column(Date, index=True)
+    assets: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    liabilities: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    invested: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+
+
 # ---------------------------------------------------------------- journal
 class JournalEntry(OwnedMixin, Base):
     __tablename__ = "journal_entries"
