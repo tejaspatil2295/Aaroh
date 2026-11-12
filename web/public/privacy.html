@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AAROH privacy policy</title>
+<style>
+  :root { --bg: #fafafa; --ink: #18181b; --muted: #52525b; --line: #e4e4e7; --accent: #5b5bd6; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111113; --ink: #ededef; --muted: #a1a1aa; --line: #27272a; --accent: #8b8bf0; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 28px 0 8px; }
+  p, li { color: var(--muted); } a { color: var(--accent); }
+  .updated { font-size: 14px; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>AAROH privacy policy</h1>
+  <p class="updated">Last updated: 12 November 2026</p>
+
+  <p>AAROH is a personal life organiser: tasks, money, investments, journal, learning, fitness and work notes. This page explains what data the app handles and your choices.</p>
+
+  <h2>What we store</h2>
+  <ul>
+    <li><strong>Account:</strong> your email address, name and a securely hashed password (Argon2). We never store your password in readable form.</li>
+    <li><strong>What you enter:</strong> tasks, goals, habits, transactions, budgets, investments and loans, journal entries and photos you attach, learning and fitness logs, work notes and side-income ideas.</li>
+    <li><strong>Settings:</strong> your preferences and which modules the AI may read. If you add your own AI provider key, it is stored encrypted and never shown again.</li>
+  </ul>
+  <p>We do not collect your location, contacts, call logs or device identifiers. There are no ads, no analytics or tracking SDKs, and we do not sell or share your data.</p>
+
+  <h2>Where it is stored</h2>
+  <p>Your data is stored in a PostgreSQL database run by the app's hosting providers (application server on Render, database on Neon), sent over encrypted HTTPS connections. Each account's data is isolated from every other account. On the phone, the app keeps only a sign-in token, in Android's secure Keystore storage.</p>
+
+  <h2>Aaroh AI</h2>
+  <p>AI features are optional. When an AI provider is configured and you ask for a briefing, review or chat reply, a summary of the modules you allowed in <em>Settings → Privacy</em> is sent to that provider (for example Anthropic or OpenAI) to generate the answer. Journal access is off by default, and individual entries can be hidden from the AI. The preview button in that section shows exactly what would be sent. Without a provider, the app uses offline rules and sends nothing.</p>
+
+  <h2>Notifications</h2>
+  <p>Task and routine reminders are scheduled on your phone. They are not sent through any push service.</p>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li><strong>Export:</strong> Settings → Security &amp; data → Export downloads all your data as a JSON file.</li>
+    <li><strong>Delete your account:</strong> Settings → Security &amp; data → Delete account permanently removes your account, all records and photos. You can also do this on the website: sign in, then Settings → Security &amp; data → Delete account.</li>
+    <li><strong>AI access:</strong> turn any module on or off in Settings → Privacy at any time.</li>
+  </ul>
+
+  <h2>Retention</h2>
+  <p>Data is kept until you delete it or your account. Deleted accounts are removed from the live database immediately. Backups, where enabled, are kept for at most 30 days.</p>
+
+  <h2>Children</h2>
+  <p>AAROH is not intended for children under 13.</p>
+
+  <h2>Contact</h2>
+  <p>Questions or requests: use the developer contact email shown on AAROH's Google Play listing.</p>
+</main>
+</body>
+</html>

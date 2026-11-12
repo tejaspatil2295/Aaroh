@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, del, get, patch, post } from "../api/client";
+import { api, del, get, getServer, isNative, patch, post } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { Badge, Button, Card, ErrorNote, Field, Input, Loading, Modal, PageHeader, Select, Textarea, cx } from "../components/ui";
 import { human } from "../components/EntityForm";
@@ -125,6 +125,7 @@ export default function SettingsPage() {
           <Button onClick={async () => { const r: Response = await api("/users/me/export", { raw: true }); const url = URL.createObjectURL(await r.blob()); const a = document.createElement("a"); a.href = url; a.download = "aaroh-export.json"; a.click(); URL.revokeObjectURL(url); }}>Export all my data (JSON)</Button>
           <Button onClick={logout}>Sign out</Button>
           <Button variant="danger" onClick={() => setDel0(true)}>Delete account</Button>
+          <a className="ml-auto self-center text-sm text-accent" href={`${isNative ? getServer() : ""}/privacy.html`} target="_blank" rel="noreferrer">Privacy policy</a>
         </div>
       </Card>
 
