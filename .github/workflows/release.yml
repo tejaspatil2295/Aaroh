@@ -47,7 +47,17 @@ jobs:
           KEY_ALIAS: "${{ secrets.ANDROID_KEY_ALIAS }}"
           KEY_PASS: "${{ secrets.ANDROID_KEY_PASSWORD }}"
         run: |
-          echo "$KS" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          # Tolerate stray spaces/newlines from copy-pasting the secrets
+          KS_PASS="$(printf '%s' "$KS_PASS" | tr -d '\r\n')"; KS_PASS="${KS_PASS#"${KS_PASS%%[![:space:]]*}"}"; KS_PASS="${KS_PASS%"${KS_PASS##*[![:space:]]}"}"
+          KEY_PASS="$(printf '%s' "$KEY_PASS" | tr -d '\r\n')"; KEY_PASS="${KEY_PASS#"${KEY_PASS%%[![:space:]]*}"}"; KEY_PASS="${KEY_PASS%"${KEY_PASS##*[![:space:]]}"}"
+          KEY_ALIAS="$(printf '%s' "$KEY_ALIAS" | tr -d '[:space:]')"
+          printf '%s' "$KS" | tr -d '[:space:]' | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "keystore: $(wc -c < "$RUNNER_TEMP/release.keystore") bytes; password length ${#KS_PASS}; key password length ${#KEY_PASS}; alias length ${#KEY_ALIAS}"
+          if ! keytool -list -keystore "$RUNNER_TEMP/release.keystore" -storepass "$KS_PASS" >/dev/null 2>&1; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD does not open the keystore in ANDROID_KEYSTORE_BASE64. Re-paste both from the android-signing folder."
+            exit 1
+          fi
+          keytool -list -keystore "$RUNNER_TEMP/release.keystore" -storepass "$KS_PASS" -alias "$KEY_ALIAS" >/dev/null 2>&1 || { echo "::error::ANDROID_KEY_ALIAS should be: aaroh"; exit 1; }
           ./gradlew assembleRelease bundleRelease \
             -Pandroid.injected.version.code=${{ github.run_number }} \
             -Pandroid.injected.version.name=${{ inputs.version }} \
