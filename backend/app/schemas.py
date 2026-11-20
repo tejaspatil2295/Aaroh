@@ -95,7 +95,7 @@ class SettingsOut(BaseModel):
 class SettingsUpdate(Base):
     preferences: Optional[dict] = None
     ai_permissions: Optional[dict[str, bool]] = None
-    ai_provider: Optional[Literal["default", "none", "anthropic", "openai_compatible"]] = None
+    ai_provider: Optional[Literal["default", "none", "anthropic", "openai_compatible", "opencode"]] = None
     ai_model: Optional[str] = Field(default=None, max_length=120)
     ai_base_url: Optional[str] = Field(default=None, max_length=255)
     ai_api_key: Optional[str] = Field(default=None, max_length=500)  # "" clears the stored key

@@ -26,4 +26,6 @@ services:
       - key: SEED_DEMO
         value: "true"          # creates demo@aaroh.app once; set to false to skip
       - key: AI_PROVIDER
-        value: none            # or anthropic / openai_compatible, then add the key
+        value: none            # or opencode / anthropic / openai_compatible, then add the key
+      - key: OPENCODE_API_KEY
+        sync: false            # optional: your OpenCode Console key; set AI_PROVIDER=opencode to use it

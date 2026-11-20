@@ -39,7 +39,7 @@ export function AppShell() {
         </div>
         <nav className="flex flex-1 flex-col gap-0.5">
           {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors", isActive ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink")}>
+            <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("press flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm", isActive ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink")}>
               <Icon className="size-4" strokeWidth={1.8} />
               {label}
             </NavLink>
@@ -50,7 +50,9 @@ export function AppShell() {
 
       <main className="min-w-0 flex-1 pb-24 lg:pb-10">
         <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8 safe-top">
-          <Outlet />
+          <div key={loc.pathname} className="page-enter">
+            <Outlet />
+          </div>
         </div>
       </main>
 
@@ -58,9 +60,13 @@ export function AppShell() {
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur lg:hidden safe-bottom" aria-label="Primary">
         <div className="grid grid-cols-5">
           {NAV.filter((n) => MOBILE_PRIMARY.includes(n.to)).map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("flex flex-col items-center gap-0.5 py-2 text-[11px]", isActive ? "text-accent" : "text-ink-3")}>
-              <Icon className="size-5" strokeWidth={1.8} />
-              {label}
+            <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("press flex flex-col items-center gap-0.5 py-2 text-[11px]", isActive ? "text-accent" : "text-ink-3")}>
+              {({ isActive }) => (
+                <>
+                  <Icon className={cx("nav-dot size-5", isActive && "-translate-y-0.5")} strokeWidth={isActive ? 2.2 : 1.8} />
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
           <button onClick={() => setMore(true)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-ink-3">
@@ -71,8 +77,8 @@ export function AppShell() {
       </nav>
       {more && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMore(false)} />
-          <div className="fade-in absolute inset-x-0 bottom-0 rounded-t-2xl border-t border-line bg-surface p-4 safe-bottom">
+          <div className="backdrop-in absolute inset-0 bg-black/40" onClick={() => setMore(false)} />
+          <div className="sheet-in absolute inset-x-0 bottom-0 rounded-t-2xl border-t border-line bg-surface p-4 safe-bottom">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm font-semibold">All modules</span>
               <button onClick={() => setMore(false)} aria-label="Close" className="p-1 text-ink-3">

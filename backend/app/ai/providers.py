@@ -14,7 +14,11 @@ from ..config import get_settings
 from ..models import UserSettings
 from ..security import decrypt_secret
 
-DEFAULT_MODELS = {"anthropic": "claude-opus-5-5", "openai_compatible": "gpt-4o-mini"}
+DEFAULT_MODELS = {"anthropic": "claude-opus-5-5", "openai_compatible": "gpt-4o-mini", "opencode": "claude-haiku-5-5"}
+# OpenCode Console: one key for many models (Claude, GPT, Gemini, GLM, DeepSeek, Qwen...) behind an
+# OpenAI-compatible endpoint that translates to each model's own API. Free-tier models only work inside
+# the OpenCode app, so a paid model id is needed here.
+OPENCODE_BASE_URL = "https://opencode.ai/inference/openai/v1"
 
 
 class AIError(Exception):
@@ -74,6 +78,7 @@ class OpenAICompatibleProvider:
     name = "openai_compatible"
 
     def __init__(self, cfg: ProviderConfig):
+        self.name = cfg.provider
         self.model = cfg.model
         self.base_url = (cfg.base_url or "https://api.openai.com/v1").rstrip("/")
         self.api_key = cfg.api_key
@@ -95,6 +100,11 @@ class OpenAICompatibleProvider:
             raise AIError("Unexpected response from the AI provider.") from e
 
 
+def _server_key(provider: str) -> str:
+    s = get_settings()
+    return {"anthropic": s.anthropic_api_key, "opencode": s.opencode_api_key}.get(provider, s.openai_api_key)
+
+
 def resolve_config(us: UserSettings | None) -> ProviderConfig | None:
     s = get_settings()
     if us and us.ai_provider and us.ai_provider != "default":
@@ -102,8 +112,8 @@ def resolve_config(us: UserSettings | None) -> ProviderConfig | None:
             return None
         key = decrypt_secret(us.ai_api_key_encrypted) if us.ai_api_key_encrypted else ""
         if not key:
-            key = s.anthropic_api_key if us.ai_provider == "anthropic" else s.openai_api_key
-        if not key and us.ai_provider == "anthropic":
+            key = _server_key(us.ai_provider)
+        if not key and us.ai_provider in ("anthropic", "opencode"):
             return None
         if not key and us.ai_provider == "openai_compatible" and not us.ai_base_url:
             return None  # local endpoints (Ollama) may not need a key, but need a base URL
@@ -111,11 +121,13 @@ def resolve_config(us: UserSettings | None) -> ProviderConfig | None:
             provider=us.ai_provider,
             model=us.ai_model or DEFAULT_MODELS[us.ai_provider],
             api_key=key or "",
-            base_url=us.ai_base_url or "",
+            base_url=OPENCODE_BASE_URL if us.ai_provider == "opencode" else (us.ai_base_url or ""),
             source="user",
         )
     if s.ai_provider == "anthropic" and s.anthropic_api_key:
         return ProviderConfig("anthropic", s.ai_model or DEFAULT_MODELS["anthropic"], s.anthropic_api_key)
+    if s.ai_provider == "opencode" and s.opencode_api_key:
+        return ProviderConfig("opencode", s.ai_model or DEFAULT_MODELS["opencode"], s.opencode_api_key, OPENCODE_BASE_URL)
     if s.ai_provider == "openai_compatible" and (s.openai_api_key or s.ai_base_url):
         return ProviderConfig("openai_compatible", s.ai_model or DEFAULT_MODELS["openai_compatible"], s.openai_api_key, s.ai_base_url)
     return None

@@ -99,14 +99,15 @@ export default function SettingsPage() {
           <Field label="Provider">
             <Select value={A.ai_provider} onChange={(e) => setAi({ ...A, ai_provider: e.target.value })}>
               <option value="default">Server default</option>
+              <option value="opencode">OpenCode (one key: Claude, GPT, Gemini, GLM, DeepSeek…)</option>
               <option value="anthropic">Anthropic (Claude)</option>
               <option value="openai_compatible">OpenAI-compatible (OpenAI, Groq, OpenRouter, Ollama…)</option>
               <option value="none">Off (offline mode)</option>
             </Select>
           </Field>
-          <Field label="Model" hint={A.ai_provider === "anthropic" ? "Default: claude-opus-5-5" : A.ai_provider === "openai_compatible" ? "e.g. gpt-4o-mini, llama-3.3-70b-versatile" : undefined}><Input value={A.ai_model} onChange={(e) => setAi({ ...A, ai_model: e.target.value })} /></Field>
+          <Field label="Model" hint={A.ai_provider === "anthropic" ? "Default: claude-opus-5-5" : A.ai_provider === "openai_compatible" ? "e.g. gpt-4o-mini, llama-3.3-70b-versatile" : A.ai_provider === "opencode" ? "Default: claude-haiku-5-5 · also glm-5.3-flash, deepseek-v4.1-flash, claude-sonnet-5-5 (paid models; free ones only work inside OpenCode)" : undefined}><Input value={A.ai_model} onChange={(e) => setAi({ ...A, ai_model: e.target.value })} /></Field>
           {A.ai_provider === "openai_compatible" && <Field label="Base URL" hint="https://api.openai.com/v1 · http://localhost:11434/v1 for Ollama"><Input value={A.ai_base_url} onChange={(e) => setAi({ ...A, ai_base_url: e.target.value })} /></Field>}
-          <Field label={`API key ${s.data.ai_key_set ? "(a key is saved, encrypted)" : ""}`} hint="Stored encrypted on the server and never sent back to the app."><Input type="password" autoComplete="off" placeholder={s.data.ai_key_set ? "•••••••• (leave blank to keep)" : "Paste key"} value={A.ai_api_key} onChange={(e) => setAi({ ...A, ai_api_key: e.target.value })} /></Field>
+          <Field label={`API key ${s.data.ai_key_set ? "(a key is saved, encrypted)" : ""}`} hint={A.ai_provider === "opencode" ? "Create one at opencode.ai/console (add credits first). Stored encrypted, never sent back to the app." : "Stored encrypted on the server and never sent back to the app."}><Input type="password" autoComplete="off" placeholder={s.data.ai_key_set ? "•••••••• (leave blank to keep)" : "Paste key"} value={A.ai_api_key} onChange={(e) => setAi({ ...A, ai_api_key: e.target.value })} /></Field>
         </div>
         <div className="mt-3 flex gap-2">
           <Button variant="primary" loading={save.isPending} onClick={async () => { const { ai_api_key, ...rest } = A; await save.mutateAsync({ ...rest, ...(ai_api_key ? { ai_api_key } : {}) }); setAi(null); flash("AI settings saved"); }}>Save AI settings</Button>

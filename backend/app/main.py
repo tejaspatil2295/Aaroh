@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
@@ -29,6 +30,10 @@ app.add_middleware(
 )
 
 
+# Compress JSON and the web bundle (the single-service deploy has no nginx in front)
+app.add_middleware(GZipMiddleware, minimum_size=800, compresslevel=6)
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
@@ -37,6 +42,9 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("Referrer-Policy", "no-referrer")
     if request.url.path.startswith("/api/v1"):
         response.headers.setdefault("Cache-Control", "no-store")
+    elif request.url.path.startswith("/assets/"):
+        # Vite file names contain a content hash, so browsers can keep them for a year
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return response
 
 
@@ -54,6 +62,12 @@ app.include_router(ai.router, prefix=API)
 for module in (planner, finance, investments, journal, learning, fitness, work_side):
     for r in module.routers:
         app.include_router(r, prefix=API)
+
+
+@app.get("/api/ping", tags=["meta"], include_in_schema=False)
+def ping():
+    """Liveness without touching the database (used by the keep-warm job, so the free database can still sleep)."""
+    return {"ok": True}
 
 
 @app.get("/api/health", tags=["meta"])

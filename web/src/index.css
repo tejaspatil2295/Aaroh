@@ -70,8 +70,59 @@ body {
 }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 .safe-top { padding-top: env(safe-area-inset-top); }
-.fade-in { animation: fade .18s ease-out; }
-@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* ---------------------------------------------------------------- motion
+   Short, GPU-friendly (opacity/transform only) and fully disabled for prefers-reduced-motion. */
+:root { --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-spring: cubic-bezier(.34, 1.4, .64, 1); }
+.fade-in { animation: fade .22s var(--ease-out) both; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-enter { animation: page .28s var(--ease-out) both; }
+@keyframes page { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* Cards, stats and list rows rise in one after another */
+.stagger > * { animation: rise .38s var(--ease-out) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(n+7) { animation-delay: 240ms; }
+@keyframes rise { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+
+/* Modals and sheets */
+.backdrop-in { animation: backdrop .2s ease-out both; }
+@keyframes backdrop { from { opacity: 0; } to { opacity: 1; } }
+.sheet-in { animation: sheet .32s var(--ease-out) both; }
+@keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
+@media (min-width: 640px) {
+  .sheet-in { animation: pop .24s var(--ease-spring) both; }
+}
+@keyframes pop { from { opacity: 0; transform: scale(.96) translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Press feedback for anything tappable */
+.press { transition: transform .12s ease, background-color .15s ease, color .15s ease, opacity .15s ease, box-shadow .2s ease; }
+.press:active:not(:disabled) { transform: scale(.97); }
+@media (hover: hover) {
+  .lift { transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .2s; }
+  .lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px -12px rgb(0 0 0 / .18); }
+}
+
+/* Loading skeletons */
+.skeleton { position: relative; overflow: hidden; background: var(--surface-2); border-radius: .75rem; }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .45), transparent);
+  animation: shimmer 1.3s infinite;
+}
+.dark .skeleton::after { background: linear-gradient(90deg, transparent, rgb(255 255 255 / .06), transparent); }
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+/* Active tab / nav pill slide */
+.nav-dot { transition: transform .25s var(--ease-spring), opacity .2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
+}
 .prose-ai p { margin: .4rem 0; }
 .prose-ai ul { list-style: disc; padding-left: 1.2rem; margin: .4rem 0; }
 .prose-ai ol { list-style: decimal; padding-left: 1.2rem; margin: .4rem 0; }

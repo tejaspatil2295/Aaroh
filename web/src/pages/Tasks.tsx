@@ -33,7 +33,7 @@ export default function Tasks() {
   const [sp, setSp] = useSearchParams();
   const tab = (sp.get("tab") as Tab) || "list";
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader title="Plan" subtitle="Tasks, calendar, goals and habits" />
       <div className="mb-4">
         <Tabs<Tab> value={tab} onChange={(t) => setSp({ tab: t })} tabs={[{ id: "list", label: "Tasks" }, { id: "calendar", label: "Calendar" }, { id: "goals", label: "Goals" }, { id: "habits", label: "Habits" }]} />
@@ -101,10 +101,10 @@ function TaskList() {
         </div>
       </div>
       <Card>
-        {tasks.isLoading ? <Loading /> : groups.length === 0 ? <Empty title="No tasks here" hint="Add a task or change the filters." /> : groups.map(([name, items]) => (
+        {tasks.isLoading ? <Loading variant="list" /> : groups.length === 0 ? <Empty title="No tasks here" hint="Add a task or change the filters." /> : groups.map(([name, items]) => (
           <div key={name} className="mb-3 last:mb-0">
             <div className={cx("mb-1 text-[11px] font-semibold tracking-wide uppercase", name === "Overdue" ? "text-bad" : "text-ink-3")}>{name} · {items.length}</div>
-            <div className="divide-y divide-line">
+            <div className="stagger divide-y divide-line">
               {items.map((t: any) => (
                 <div key={t.id} className="cursor-pointer" onClick={(e) => { if (!(e.target as HTMLElement).closest("button")) setEdit(t); }}>
                   <TaskRow t={t} onDone={toggle} />
@@ -271,8 +271,8 @@ function CalendarView() {
         <div className="text-sm font-semibold">{label}</div>
         <div className="ml-auto"><Tabs value={view} onChange={setView} tabs={[{ id: "day", label: "Day" }, { id: "week", label: "Week" }, { id: "month", label: "Month" }]} /></div>
       </div>
-      {isLoading ? <Loading /> : view === "day" ? (
-        <div className="divide-y divide-line">
+      {isLoading ? <Loading variant="list" /> : view === "day" ? (
+        <div className="stagger divide-y divide-line">
           {(byDay[iso(anchor)] || []).length === 0 && <Empty title="Nothing scheduled" />}
           {(byDay[iso(anchor)] || []).sort((a, b) => (a.scheduled_start || "z").localeCompare(b.scheduled_start || "z")).map((t) => (
             <button key={t.id} onClick={() => setEdit(t)} className="flex w-full items-center gap-3 py-2.5 text-left text-sm">
@@ -336,7 +336,7 @@ function Goals() {
   return (
     <>
       <div className="mb-3 flex justify-end"><Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({})}>Goal</Button></div>
-      {goals.isLoading ? <Loading /> : (goals.data || []).length === 0 ? <Empty title="No goals yet" hint="Goals connect tasks, habits and milestones so progress is visible." /> : (
+      {goals.isLoading ? <Loading variant="list" /> : (goals.data || []).length === 0 ? <Empty title="No goals yet" hint="Goals connect tasks, habits and milestones so progress is visible." /> : (
         <div className="grid gap-3 md:grid-cols-2">
           {(goals.data || []).map((g: any) => {
             const p = prog[g.id];
@@ -394,7 +394,7 @@ function Habits() {
     <>
       <div className="mb-3 flex justify-end"><Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({})}>Habit</Button></div>
       <Card pad={false}>
-        {status.isLoading ? <Loading /> : (status.data || []).length === 0 ? <div className="p-4"><Empty title="No habits yet" hint="Start with one or two you can keep, like a 20-minute walk." /></div> : (
+        {status.isLoading ? <Loading variant="list" /> : (status.data || []).length === 0 ? <div className="p-4"><Empty title="No habits yet" hint="Start with one or two you can keep, like a 20-minute walk." /></div> : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

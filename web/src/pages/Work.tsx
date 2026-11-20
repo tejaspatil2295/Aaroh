@@ -30,7 +30,7 @@ export default function Work() {
   const week = useQuery({ queryKey: ["/work/weekly"], queryFn: () => get("/work/weekly") });
   const crud = useCrud("/work/logs", ["/work/projects", "/work/weekly"]);
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader title="Work journal" subtitle="Daily updates that become weekly reports, reviews and resume bullets" actions={<Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({ date: todayIso() })}>Daily update</Button>} />
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Days logged (7d)" value={week.data?.days_logged ?? "—"} />
@@ -44,7 +44,7 @@ export default function Work() {
             <Input placeholder="Search problems, solutions, learnings…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
             <Select value={project} onChange={(e) => setProject(e.target.value)} className="w-auto"><option value="">All projects</option>{(projects.data || []).map((p) => <option key={p.project} value={p.project === "General" ? "" : p.project}>{p.project}</option>)}</Select>
           </div>
-          {list.isLoading ? <Loading /> : (list.data || []).length === 0 ? <Empty title="No work updates yet" hint="Two or three lines a day are enough." /> : (list.data || []).map((w: any) => (
+          {list.isLoading ? <Loading variant="list" /> : (list.data || []).length === 0 ? <Empty title="No work updates yet" hint="Two or three lines a day are enough." /> : (list.data || []).map((w: any) => (
             <Card key={w.id} className="cursor-pointer hover:border-ink-3">
               <button className="block w-full text-left" onClick={() => setEdit(w)}>
                 <div className="mb-1 flex items-center gap-2 text-xs text-ink-3"><span>{fmtDate(w.date, { weekday: "short", day: "numeric", month: "short" })}</span>{w.project && <Badge tone="accent">{w.project}</Badge>}{w.hours && <span>{Number(w.hours)} h</span>}</div>
@@ -55,7 +55,7 @@ export default function Work() {
             </Card>
           ))}
         </div>
-        <div className="space-y-4">
+        <div className="stagger space-y-4">
           <InsightCard kind="work_weekly_report" title="Weekly work report" cta="Write my weekly report" />
           <Card title="Projects">
             <div className="space-y-2">{(projects.data || []).map((p) => <div key={p.project} className="flex justify-between text-sm"><span>{p.project}</span><span className="text-xs text-ink-3">{p.entries} entries · {p.hours} h</span></div>)}</div>

@@ -65,7 +65,7 @@ export default function Investments() {
   ];
 
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader
         title="Investments"
         subtitle="Net worth, holdings, SIPs and loans"
@@ -125,8 +125,8 @@ function Overview({ onAdd }: { onAdd: () => void }) {
   const pie = slices.length > 5 ? [...slices.slice(0, 4), { name: "Other", value: slices.slice(4).reduce((a, x) => a + x.value, 0) }] : slices;
   const history = d.history.map((h: any) => ({ ...h, label: fmtDate(h.date, { month: "short", day: "numeric" }) }));
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="stagger space-y-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={<Wallet className="size-3.5" />} label="Net worth" value={<span className={d.net_worth < 0 ? "text-bad" : ""}>{moneyShort(d.net_worth)}</span>} sub={`${moneyShort(d.total_assets)} assets − ${moneyShort(d.total_liabilities)} loans`} />
         <Stat icon={<TrendingUp className="size-3.5" />} label="Investments" value={moneyShort(d.total_assets)} sub={<span className={d.total_gain >= 0 ? "text-good" : "text-bad"}>{signed(d.total_gain)} {pctSigned(d.total_return_pct)} on {moneyShort(d.total_invested)}</span>} />
         <Stat icon={<CalendarClock className="size-3.5" />} label="Monthly SIPs" value={money(d.monthly_sip)} sub={d.monthly_emi ? `EMIs ${money(d.monthly_emi)}` : "No EMIs"} />
@@ -175,7 +175,7 @@ function Overview({ onAdd }: { onAdd: () => void }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Coming up (30 days)">
           {d.upcoming.length === 0 ? <p className="text-sm text-ink-3">No SIPs, EMIs or maturities in the next 30 days.</p> : (
-            <div className="divide-y divide-line">
+            <div className="stagger divide-y divide-line">
               {d.upcoming.map((u: any, i: number) => (
                 <div key={i} className="flex items-center gap-3 py-2 text-sm">
                   <span className="w-14 text-xs text-ink-3">{fmtDate(u.date, { day: "numeric", month: "short" })}</span>
@@ -206,8 +206,8 @@ function Holdings({ onEdit }: { onEdit: (h: any) => void }) {
   const rows = (list.data || []) as any[];
   return (
     <Card title={`${rows.length} holding${rows.length === 1 ? "" : "s"}`}>
-      {list.isLoading ? <Loading /> : rows.length === 0 ? <Empty title="No investments yet" /> : (
-        <div className="divide-y divide-line">
+      {list.isLoading ? <Loading variant="list" /> : rows.length === 0 ? <Empty title="No investments yet" /> : (
+        <div className="stagger divide-y divide-line">
           {rows.map((h) => {
             const gain = Number(h.current_value) - Number(h.invested_amount);
             const p = perf[h.id];
@@ -243,8 +243,8 @@ function Loans({ onEdit }: { onEdit: (l: any) => void }) {
   const total = rows.filter((l) => l.active).reduce((a, l) => a + Number(l.outstanding), 0);
   return (
     <Card title={`Loans · ${moneyShort(total)} outstanding`}>
-      {list.isLoading ? <Loading /> : rows.length === 0 ? <Empty title="No loans" hint="Add home, vehicle, personal or education loans and credit-card balances so net worth is accurate." /> : (
-        <div className="divide-y divide-line">
+      {list.isLoading ? <Loading variant="list" /> : rows.length === 0 ? <Empty title="No loans" hint="Add home, vehicle, personal or education loans and credit-card balances so net worth is accurate." /> : (
+        <div className="stagger divide-y divide-line">
           {rows.map((l) => (
             <button key={l.id} onClick={() => onEdit(l)} className="flex w-full items-center gap-3 py-2.5 text-left">
               <div className="min-w-0 flex-1">
