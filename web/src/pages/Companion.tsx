@@ -57,7 +57,7 @@ export default function Companion() {
   const current = personas.find((p: any) => p.id === persona);
 
   return (
-    <div className="fade-in">
+    <div>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Aaroh AI</h1>

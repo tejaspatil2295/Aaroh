@@ -10,30 +10,69 @@ import { Loading } from "./components/ui";
 import { applyTheme } from "./lib/theme";
 import Login from "./pages/Login";
 
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Tasks = lazy(() => import("./pages/Tasks"));
-const Finance = lazy(() => import("./pages/Finance"));
-const Investments = lazy(() => import("./pages/Investments"));
-const Journal = lazy(() => import("./pages/Journal"));
-const Learning = lazy(() => import("./pages/Learning"));
-const Fitness = lazy(() => import("./pages/Fitness"));
-const Work = lazy(() => import("./pages/Work"));
-const SideIncome = lazy(() => import("./pages/SideIncome"));
-const Companion = lazy(() => import("./pages/Companion"));
-const SettingsPage = lazy(() => import("./pages/Settings"));
+// Page chunks: loaded lazily, then prefetched in the background after sign-in so navigation is instant.
+const pages = {
+  Dashboard: () => import("./pages/Dashboard"),
+  Tasks: () => import("./pages/Tasks"),
+  Finance: () => import("./pages/Finance"),
+  Investments: () => import("./pages/Investments"),
+  Journal: () => import("./pages/Journal"),
+  Learning: () => import("./pages/Learning"),
+  Fitness: () => import("./pages/Fitness"),
+  Work: () => import("./pages/Work"),
+  SideIncome: () => import("./pages/SideIncome"),
+  Companion: () => import("./pages/Companion"),
+  SettingsPage: () => import("./pages/Settings"),
+};
+const Dashboard = lazy(pages.Dashboard);
+const Tasks = lazy(pages.Tasks);
+const Finance = lazy(pages.Finance);
+const Investments = lazy(pages.Investments);
+const Journal = lazy(pages.Journal);
+const Learning = lazy(pages.Learning);
+const Fitness = lazy(pages.Fitness);
+const Work = lazy(pages.Work);
+const SideIncome = lazy(pages.SideIncome);
+const Companion = lazy(pages.Companion);
+const SettingsPage = lazy(pages.SettingsPage);
 
 applyTheme();
-const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: true } } });
+const qc = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000, // reuse data for a minute when moving between screens
+      gcTime: 10 * 60_000,
+      retry: 1,
+      refetchOnWindowFocus: true,
+      placeholderData: (prev: unknown) => prev, // keep showing the last data while a filter/month change loads
+    },
+  },
+});
+
+function prefetchPages() {
+  const run = () => Object.values(pages).forEach((load) => load().catch(() => undefined));
+  const ric = (window as any).requestIdleCallback as ((cb: () => void, o?: { timeout: number }) => void) | undefined;
+  if (ric) ric(run, { timeout: 3000 });
+  else setTimeout(run, 1200);
+}
+
+let prefetched = false;
+function prefetchOnce() {
+  if (prefetched) return;
+  prefetched = true;
+  prefetchPages();
+}
 
 function Gate() {
   const { user, loading } = useAuth();
   if (loading)
     return (
       <div className="grid h-full place-items-center">
-        <Loading />
+        <Loading variant="inline" />
       </div>
     );
   if (!user) return <Login />;
+  prefetchOnce();
   return (
     <Routes>
       <Route element={<AppShell />}>

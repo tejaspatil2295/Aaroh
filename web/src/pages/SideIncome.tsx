@@ -40,7 +40,7 @@ export default function SideIncome() {
   const rev = Object.fromEntries((summary.data?.opportunities || []).map((o: any) => [o.id, o]));
 
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader title="Knowledge & side income" subtitle="Turn your UPSC years and engineering skills into realistic income streams" actions={<><Button onClick={() => setShowIdeas(true)}>Starter ideas</Button><Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({ category: "other", status: "idea" })}>Opportunity</Button></>} />
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Opportunities" value={list.data?.length ?? "—"} />
@@ -48,7 +48,7 @@ export default function SideIncome() {
         <Stat label="Costs to date" value={money(summary.data?.total_costs)} />
         <Stat label="Committed hours / week" value={summary.data?.active_hours_per_week ?? "—"} sub="active + validating" />
       </div>
-      {list.isLoading ? <Loading /> : (list.data || []).length === 0 ? <Empty title="No opportunities yet" hint="Start from a template based on your background, then validate cheaply before investing." action={<Button onClick={() => setShowIdeas(true)}>Browse starter ideas</Button>} /> : (
+      {list.isLoading ? <Loading variant="list" /> : (list.data || []).length === 0 ? <Empty title="No opportunities yet" hint="Start from a template based on your background, then validate cheaply before investing." action={<Button onClick={() => setShowIdeas(true)}>Browse starter ideas</Button>} /> : (
         <div className="grid gap-3 md:grid-cols-2">
           {(list.data || []).map((o) => (
             <Card key={o.id}>

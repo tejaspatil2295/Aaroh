@@ -16,7 +16,7 @@ const REL = ["/fitness/summary", "/fitness/series", "/fitness/exercises"];
 export default function Fitness() {
   const [tab, setTab] = useState<Tab>("today");
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader title="Fitness & health" subtitle="Workouts, nutrition, activity and body metrics" />
       <div className="mb-4"><Tabs<Tab> value={tab} onChange={setTab} tabs={[{ id: "today", label: "Today" }, { id: "workouts", label: "Workouts" }, { id: "food", label: "Food diary" }, { id: "body", label: "Body" }, { id: "progress", label: "Progress" }]} /></div>
       {tab === "today" && <Today />}
@@ -44,7 +44,7 @@ function Today() {
     { label: "Steps", v: t.steps, max: t.steps_target, unit: "", color: "var(--chart-4)" },
   ];
   return (
-    <div className="space-y-4">
+    <div className="stagger space-y-4">
       <Card>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {rings.map((r) => (
@@ -157,7 +157,7 @@ function Workouts() {
   return (
     <>
       <div className="mb-3 flex justify-end"><Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({})}>Workout</Button></div>
-      {list.isLoading ? <Loading /> : (list.data || []).length === 0 ? <Empty title="No workouts logged" /> : (
+      {list.isLoading ? <Loading variant="list" /> : (list.data || []).length === 0 ? <Empty title="No workouts logged" /> : (
         <div className="space-y-2">
           {(list.data || []).map((w) => {
             const ex = Array.from(new Set(w.sets.map((s: any) => s.exercise)));
@@ -198,8 +198,8 @@ function Food() {
       <div className="mb-3 grid grid-cols-4 gap-2 text-center text-xs">
         {[["Calories", totals.cal, ""], ["Protein", totals.p, "g"], ["Carbs", totals.c, "g"], ["Fat", totals.fat, "g"]].map(([l, v, u]) => <div key={l as string} className="rounded-lg bg-surface-2 py-2"><div className="text-base font-semibold tabular-nums">{num(v as number)}{u}</div><div className="text-ink-3">{l}</div></div>)}
       </div>
-      {list.isLoading ? <Loading /> : (list.data || []).length === 0 ? <Empty title="Nothing logged for this day" /> : (
-        <div className="divide-y divide-line">
+      {list.isLoading ? <Loading variant="list" /> : (list.data || []).length === 0 ? <Empty title="Nothing logged for this day" /> : (
+        <div className="stagger divide-y divide-line">
           {(list.data || []).map((f: any) => (
             <button key={f.id} onClick={() => setEdit(f)} className="flex w-full items-center gap-3 py-2 text-left text-sm">
               <Badge>{human(f.meal)}</Badge>

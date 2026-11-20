@@ -26,7 +26,7 @@ export function Button({ variant = "secondary", size = "md", loading, icon, clas
       {...rest}
       disabled={disabled || loading}
       className={cx(
-        "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none",
+        "press inline-flex items-center justify-center gap-1.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed select-none",
         size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-10 px-3.5 text-sm",
         variant === "primary" && "bg-accent text-white hover:opacity-90",
         variant === "secondary" && "border border-line bg-surface text-ink hover:bg-surface-2",
@@ -70,8 +70,8 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div className={cx("fade-in relative max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-line bg-surface p-5 shadow-xl sm:rounded-2xl safe-bottom", wide ? "sm:max-w-2xl" : "sm:max-w-lg")}>
+      <div className="backdrop-in absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+      <div className={cx("sheet-in relative max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-line bg-surface p-5 shadow-xl sm:rounded-2xl safe-bottom", wide ? "sm:max-w-2xl" : "sm:max-w-lg")}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold">{title}</h3>
           <button onClick={onClose} className="rounded-md p-1 text-ink-3 hover:bg-surface-2 hover:text-ink" aria-label="Close">
@@ -121,7 +121,7 @@ export function Ring({ value, size = 96, stroke = 8, children, color = "var(--ac
 
 export function Stat({ label, value, sub, icon }: { label: string; value: ReactNode; sub?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4">
+    <div className="lift rounded-2xl border border-line bg-surface p-4">
       <div className="flex items-center gap-1.5 text-[12px] font-medium text-ink-3">
         {icon}
         {label}
@@ -151,7 +151,7 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
           role="tab"
           aria-selected={value === t.id}
           onClick={() => onChange(t.id)}
-          className={cx("h-8 shrink-0 rounded-lg px-3 text-[13px] font-medium transition-colors", value === t.id ? "bg-ink text-bg" : "text-ink-2 hover:bg-surface-2")}
+          className={cx("press h-8 shrink-0 rounded-lg px-3 text-[13px] font-medium", value === t.id ? "bg-ink text-bg" : "text-ink-2 hover:bg-surface-2")}
         >
           {t.label}
         </button>
@@ -176,10 +176,23 @@ export function Spinner({ className }: { className?: string }) {
   return <Loader2 className={cx("size-5 animate-spin text-ink-3", className)} />;
 }
 
-export function Loading() {
+/** Skeleton placeholder shaped like a typical screen: a row of stat tiles and two cards. */
+export function Loading({ variant = "page" }: { variant?: "page" | "list" | "inline" }) {
+  if (variant === "inline") return <div className="grid place-items-center py-10"><Spinner /></div>;
+  if (variant === "list") {
+    return (
+      <div className="space-y-2.5 py-1" aria-busy="true" aria-label="Loading">
+        {[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-11" style={{ opacity: 1 - i * 0.15 }} />)}
+      </div>
+    );
+  }
   return (
-    <div className="grid place-items-center py-16">
-      <Spinner />
+    <div className="space-y-4" aria-busy="true" aria-label="Loading">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-[92px] rounded-2xl" />)}</div>
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="skeleton h-64 rounded-2xl lg:col-span-3" />
+        <div className="skeleton h-64 rounded-2xl lg:col-span-2" />
+      </div>
     </div>
   );
 }

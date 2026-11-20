@@ -269,6 +269,36 @@ def test_openai_compatible_provider_uses_user_key_and_context(client, user, monk
     assert b["items"][0]["title"] == "Install kind" and len(b["created"]) == 1
 
 
+def test_opencode_provider_user_key_and_server_key(client, user, monkeypatch):
+    from app.config import get_settings
+    h = user["headers"]
+    captured = {}
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        captured.update(url=url, body=json, headers=headers)
+        return httpx.Response(200, json={"choices": [{"message": {"content": "Hello from OpenCode"}}]})
+
+    monkeypatch.setattr("app.ai.providers.httpx.post", fake_post)
+    # Picking OpenCode without any key stays offline (labelled), never a fake answer
+    st = client.patch(f"{API}/users/me/settings", headers=h, json={"ai_provider": "opencode"}).json()
+    assert st["ai_effective"]["mode"] != "ai"
+    # User's own key: fixed OpenCode endpoint, default model
+    st = client.patch(f"{API}/users/me/settings", headers=h, json={"ai_provider": "opencode", "ai_api_key": "oc-user-key"}).json()
+    assert st["ai_effective"]["mode"] == "ai" and st["ai_effective"]["model"] == "claude-haiku-5-5"
+    r = client.post(f"{API}/ai/chat", headers=h, json={"message": "Hi", "persona": "life_coach"}).json()
+    assert r["message"]["content"] == "Hello from OpenCode" and r["message"]["provider"] == "opencode"
+    assert captured["url"] == "https://opencode.ai/inference/openai/v1/chat/completions"
+    assert captured["headers"]["Authorization"] == "Bearer oc-user-key" and captured["body"]["model"] == "claude-haiku-5-5"
+    # Server-wide key from the environment, chosen model
+    client.patch(f"{API}/users/me/settings", headers=h, json={"ai_provider": "default", "ai_api_key": ""})
+    s = get_settings()
+    monkeypatch.setattr(s, "ai_provider", "opencode")
+    monkeypatch.setattr(s, "opencode_api_key", "oc-server-key")
+    monkeypatch.setattr(s, "ai_model", "glm-5.3-flash")
+    client.post(f"{API}/ai/chat", headers=h, json={"message": "Hi again", "persona": "life_coach"})
+    assert captured["headers"]["Authorization"] == "Bearer oc-server-key" and captured["body"]["model"] == "glm-5.3-flash"
+
+
 # ---------------------------------------------------------------- export & deletion
 def test_export_and_delete_account(client):
     u = make_user(client)
@@ -333,3 +363,11 @@ def test_investments_are_private_to_their_owner(client, user):
     other = make_user(client, "Other")["headers"]
     assert client.get(f"{API}/investments/holdings/{inv['id']}", headers=other).status_code == 404
     assert client.get(f"{API}/investments/summary", headers=other).json()["holdings"] == []
+
+
+def test_ping_gzip_and_asset_caching(client, tmp_path):
+    assert client.get("/api/ping").json() == {"ok": True}
+    big = client.get(f"{API}/finance/categories", headers={"Accept-Encoding": "gzip"})
+    assert big.status_code == 200
+    r = client.get("/api/openapi.json", headers={"Accept-Encoding": "gzip"})
+    assert r.headers.get("content-encoding") == "gzip"

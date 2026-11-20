@@ -86,7 +86,7 @@ export default function Journal() {
   };
 
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader title="Journal" subtitle="Experiences, reflections, decisions and lessons" actions={<Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({ kind: "reflection", entry_date: todayIso() })}>Entry</Button>} />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -95,7 +95,7 @@ export default function Journal() {
             <Select value={kind} onChange={(e) => { setKind(e.target.value); setTag(""); }} className="w-auto"><option value="">All types</option>{KINDS.map((k) => <option key={k} value={k}>{human(k)}</option>)}</Select>
             {tag && <Button size="sm" variant="ghost" onClick={() => setTag("")}>#{tag} ✕</Button>}
           </div>
-          {list.isLoading ? <Loading /> : (list.data || []).length === 0 ? <Empty title="No entries" hint="Write two honest lines. Patterns appear after a week or two." /> : (
+          {list.isLoading ? <Loading variant="list" /> : (list.data || []).length === 0 ? <Empty title="No entries" hint="Write two honest lines. Patterns appear after a week or two." /> : (
             (list.data || []).map((e: any) => (
               <Card key={e.id} className="cursor-pointer transition-colors hover:border-ink-3">
                 <button className="block w-full text-left" onClick={() => setEdit({ ...e, mood: e.mood ? String(e.mood) : "", energy: e.energy ? String(e.energy) : "" })}>
@@ -113,7 +113,7 @@ export default function Journal() {
             ))
           )}
         </div>
-        <div className="space-y-4">
+        <div className="stagger space-y-4">
           <Card title="Mood · 90 days">
             {mood.data?.mood_series?.length ? (
               <>

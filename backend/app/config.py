@@ -29,11 +29,12 @@ class Settings(BaseSettings):
     max_upload_mb: int = 8
 
     # AI (server-level defaults; users may override with their own key in Settings)
-    ai_provider: str = "none"  # none | anthropic | openai_compatible
+    ai_provider: str = "none"  # none | anthropic | openai_compatible | opencode
     ai_model: str = ""
     ai_base_url: str = ""  # for openai_compatible (e.g. https://api.openai.com/v1, http://ollama:11434/v1)
     anthropic_api_key: str = ""
     openai_api_key: str = ""
+    opencode_api_key: str = ""  # OpenCode Console key (https://opencode.ai/console)
 
     @field_validator("database_url")
     @classmethod

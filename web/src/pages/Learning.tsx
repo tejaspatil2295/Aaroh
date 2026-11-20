@@ -21,7 +21,7 @@ export default function Learning() {
   const logs = useCrud("/learning/logs", REL);
   const skillOpts = (skills.data || []).map((s: any) => ({ value: s.id, label: s.name }));
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader title="Learning hub" subtitle="Skills, roadmaps, notes and interview prep" actions={<Button variant="primary" icon={<Clock className="size-4" />} onClick={() => setLogOpen(true)}>Log study time</Button>} />
       <div className="mb-4"><Tabs<Tab> value={tab} onChange={setTab} tabs={[{ id: "overview", label: "Overview" }, { id: "skills", label: "Skills & roadmaps" }, { id: "notes", label: "Notes & snippets" }, { id: "resources", label: "Resources" }, { id: "courses", label: "Courses & projects" }, { id: "interview", label: "Interview prep" }]} /></div>
       {tab === "overview" && <Overview />}
@@ -80,8 +80,8 @@ function Overview() {
   if (!s.data) return <Loading />;
   const d = s.data;
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="stagger space-y-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Today" value={`${d.today_minutes} min`} sub={<Progress className="mt-1.5" value={d.today_minutes / (d.daily_target_minutes || 1)} />} />
         <Stat label="This week" value={`${(d.week_minutes / 60).toFixed(1)} h`} sub={<Progress className="mt-1.5" value={d.week_minutes / (d.week_target_minutes || 1)} tone={d.week_minutes >= d.week_target_minutes ? "good" : "accent"} />} />
         <Stat label="Active days (28d)" value={d.days_learned_28d} />
@@ -134,7 +134,7 @@ function Skills() {
   return (
     <>
       <div className="mb-3 flex justify-end"><Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({})}>Skill</Button></div>
-      {skills.isLoading ? <Loading /> : (skills.data || []).length === 0 ? <Empty title="No skills yet" hint="Add the technologies you want to learn, then a roadmap for each." /> : (
+      {skills.isLoading ? <Loading variant="list" /> : (skills.data || []).length === 0 ? <Empty title="No skills yet" hint="Add the technologies you want to learn, then a roadmap for each." /> : (
         <div className="grid gap-3 md:grid-cols-2">
           {(skills.data || []).map((s: any) => {
             const items = (roadmap.data || []).filter((r: any) => r.skill_id === s.id);
@@ -186,7 +186,7 @@ function Notes({ skillOpts }: { skillOpts: { value: string; label: string }[] })
   return (
     <>
       <div className="mb-3 flex gap-2"><Input placeholder="Search notes and code" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" /><Button className="ml-auto" variant="primary" icon={<Plus className="size-4" />} onClick={() => setEdit({})}>Note</Button></div>
-      {list.isLoading ? <Loading /> : (list.data || []).length === 0 ? <Empty title="No notes yet" /> : (
+      {list.isLoading ? <Loading variant="list" /> : (list.data || []).length === 0 ? <Empty title="No notes yet" /> : (
         <div className="grid gap-3 md:grid-cols-2">
           {(list.data || []).map((n: any) => (
             <Card key={n.id} className="cursor-pointer hover:border-ink-3">

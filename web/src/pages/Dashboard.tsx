@@ -91,7 +91,7 @@ export default function Dashboard() {
         <InsightCard className="lg:col-span-2" kind={hour >= 17 ? "evening_review" : "morning_briefing"} title={hour >= 17 ? "Evening review" : "Morning briefing"} cta={hour >= 17 ? "Review my day" : "Brief me"} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={<Wallet className="size-3.5" />} label="Spent today" value={money(d.finance.today_expense)} sub={<>{d.finance.budget ? `${pct(d.finance.budget_used_pct)} of ${money(d.finance.budget)} this month` : `${money(d.finance.month_expense)} this month`}{d.investments && <Link to="/investments" className="mt-0.5 block text-accent">Net worth {moneyShort(d.investments.net_worth)}</Link>}</>} />
         <Stat icon={<Flame className="size-3.5" />} label="Protein" value={`${num(f.protein_g)} g`} sub={<Progress className="mt-1.5" value={f.protein_g / f.protein_target} tone={f.protein_g >= f.protein_target ? "good" : "accent"} />} />
         <Stat icon={<GraduationCap className="size-3.5" />} label="Learning" value={`${d.learning.today_minutes} min`} sub={`${Math.round(d.learning.week_minutes / 60 * 10) / 10} / ${d.learning.week_target_minutes / 60} h this week`} />
@@ -108,14 +108,14 @@ export default function Dashboard() {
           {todayTasks.length === 0 && d.tasks.done_today.length === 0 ? (
             <Empty title="Nothing due today" hint="Add tasks in the planner or let Aaroh suggest some." />
           ) : (
-            <div className="divide-y divide-line">
+            <div className="stagger divide-y divide-line">
               {[...todayTasks, ...d.tasks.done_today].map((t: any) => <TaskRow key={t.id} t={t} onDone={complete} />)}
             </div>
           )}
           {d.tasks.upcoming.length > 0 && (
             <>
               <div className="mt-4 mb-1 text-[11px] font-semibold tracking-wide text-ink-3 uppercase">Coming up</div>
-              <div className="divide-y divide-line">{d.tasks.upcoming.slice(0, 4).map((t: any) => <TaskRow key={t.id} t={t} onDone={complete} />)}</div>
+              <div className="stagger divide-y divide-line">{d.tasks.upcoming.slice(0, 4).map((t: any) => <TaskRow key={t.id} t={t} onDone={complete} />)}</div>
             </>
           )}
         </Card>

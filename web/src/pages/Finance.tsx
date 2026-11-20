@@ -32,7 +32,7 @@ export default function Finance() {
   ];
 
   return (
-    <div className="fade-in">
+    <div>
       <PageHeader
         title="Money"
         subtitle="Expenses, income, budgets and savings"
@@ -104,8 +104,8 @@ function Overview({ month }: { month: string }) {
   const pie = Object.entries(d.by_category).map(([name, value]) => ({ name: human(name), value }));
   const daily = Object.entries(d.daily).map(([date, v]) => ({ date: date.slice(8), spend: v }));
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="stagger space-y-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={<TrendingDown className="size-3.5" />} label="Spent" value={money(d.total_expense)} sub={d.budget ? <Progress className="mt-1.5" value={d.budget_used_pct} tone={d.budget_used_pct > 1 ? "bad" : d.budget_used_pct > 0.85 ? "warn" : "accent"} /> : "No budget set"} />
         <Stat icon={<TrendingUp className="size-3.5" />} label="Income" value={money(d.total_income)} sub={d.side_income ? `${money(d.side_income)} from side income` : undefined} />
         <Stat label="Net savings" value={<span className={d.net_savings < 0 ? "text-bad" : ""}>{money(d.net_savings)}</span>} sub={`Savings rate ${pct(d.savings_rate)}`} />
@@ -188,10 +188,10 @@ function Transactions({ month, onEdit }: { month: string; onEdit: (t: any) => vo
         <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
         <Select value={kind} onChange={(e) => setKind(e.target.value)} className="w-auto"><option value="">All</option><option value="expense">Expenses</option><option value="income">Income</option></Select>
       </div>
-      {list.isLoading ? <Loading /> : groups.length === 0 ? <Empty title="No transactions" /> : groups.map(([date, items]) => (
+      {list.isLoading ? <Loading variant="list" /> : groups.length === 0 ? <Empty title="No transactions" /> : groups.map(([date, items]) => (
         <div key={date} className="mb-3">
           <div className="mb-1 flex justify-between text-[11px] font-semibold tracking-wide text-ink-3 uppercase"><span>{fmtDate(date, { weekday: "short", day: "numeric", month: "short" })}</span><span>{money(items.filter((t) => t.kind === "expense").reduce((a, t) => a + Number(t.amount), 0))}</span></div>
-          <div className="divide-y divide-line">
+          <div className="stagger divide-y divide-line">
             {items.map((t) => (
               <button key={t.id} onClick={() => onEdit(t)} className="flex w-full items-center gap-3 py-2 text-left">
                 <div className="min-w-0 flex-1"><div className="truncate text-sm">{t.description || human(t.category)}</div><div className="text-[11px] text-ink-3">{human(t.category)}{t.payment_method && ` · ${t.payment_method.toUpperCase()}`}</div></div>
@@ -249,8 +249,8 @@ export function Simple({ path, title, fields, render, defaults = {}, related = [
   const [edit, setEdit] = useState<any | null>(null);
   return (
     <Card action={<Button size="sm" variant="primary" icon={<Plus className="size-3.5" />} onClick={() => setEdit({})}>Add {title}</Button>} title={`${human(title)}s`}>
-      {list.isLoading ? <Loading /> : (list.data || []).length === 0 ? <Empty title={`No ${title}s yet`} /> : (
-        <div className="divide-y divide-line">{(list.data || []).map((x: any) => <button key={x.id} className="block w-full py-2.5 text-left" onClick={() => setEdit(x)}>{render(x)}</button>)}</div>
+      {list.isLoading ? <Loading variant="list" /> : (list.data || []).length === 0 ? <Empty title={`No ${title}s yet`} /> : (
+        <div className="stagger divide-y divide-line">{(list.data || []).map((x: any) => <button key={x.id} className="block w-full py-2.5 text-left" onClick={() => setEdit(x)}>{render(x)}</button>)}</div>
       )}
       <Modal open={!!edit} onClose={() => setEdit(null)} title={edit?.id ? `Edit ${title}` : `New ${title}`} wide>
         {edit && <EntityForm fields={fields} initial={edit.id ? edit : defaults} onSubmit={async (d) => { edit.id ? await crud.update.mutateAsync({ id: edit.id, data: d }) : await crud.create.mutateAsync(d); setEdit(null); }} onDelete={edit.id ? async () => { await crud.remove.mutateAsync(edit.id); setEdit(null); } : undefined} />}

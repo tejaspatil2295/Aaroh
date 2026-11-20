@@ -75,18 +75,9 @@ jobs:
         run: npm run build && npx cap sync android
         env: { VITE_API_URL: "${{ inputs.api_url || vars.AAROH_API_URL }}" }
       - name: Assemble APK
+        # CI builds an unsigned-debug APK for testing; signed releases come from the "Release Android app" workflow
         working-directory: web/android
-        run: |
-          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
-            ./gradlew assembleRelease \
-              -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
-              -Pandroid.injected.signing.store.password='${{ secrets.ANDROID_KEYSTORE_PASSWORD }}' \
-              -Pandroid.injected.signing.key.alias='${{ secrets.ANDROID_KEY_ALIAS }}' \
-              -Pandroid.injected.signing.key.password='${{ secrets.ANDROID_KEY_PASSWORD }}'
-          else
-            ./gradlew assembleDebug
-          fi
+        run: ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: aaroh-apk
